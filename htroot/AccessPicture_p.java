@@ -40,108 +40,112 @@ import net.yacy.visualization.RasterPlotter;
 
 public class AccessPicture_p {
 
-    private static int[] times = new int[]{60000, 50000, 40000, 30000, 20000, 10000, 1000};
+  private static int[] times={60000,50000,40000,30000,20000,10000,1000};
 
-    public static RasterPlotter respond(@SuppressWarnings("unused") final RequestHeader header, final serverObjects post, final serverSwitch env) {
-        final Switchboard sb = (Switchboard) env;
+  public static RasterPlotter respond(@SuppressWarnings("unused") final RequestHeader header, final serverObjects post, final serverSwitch env) {
+    final Switchboard sb=(Switchboard) env;
 
-        String color_text    = "AAAAAA";
-        String color_back    = "FFFFFF";
-        String color_grid    = "333333";
-        String color_dot     = "33CC33";
-        String color_line    = "555555";
+    String color_text    ="AAAAAA";
+    String color_back    ="FFFFFF";
+    String color_grid    ="333333";
+    String color_dot     ="33CC33";
+    String color_line    ="555555";
 
-        int width = 1024;
-        int height = 576;
-        int cellsize = 18;
-        boolean corona = false;
-        int coronaangle = 0;
+    int width=1024;
+    int height=576;
+    int cellsize=18;
+    boolean corona=false;
+    int coronaangle=0;
 
-        if (post != null) {
-            width         = post.getInt("width", 1024);
-            height        = post.getInt("height", 576);
-            cellsize      = post.getInt("cellsize", cellsize);
-            color_text    = post.get("colortext",   color_text);
-            color_back    = post.get("colorback",   color_back);
-            color_grid    = post.get("colorgrid",   color_grid);
-            color_dot     = post.get("colordot",    color_dot);
-            color_line    = post.get("colorline",   color_line);
-            corona        = !post.containsKey("corona") || post.getBoolean("corona");
-            coronaangle   = (corona) ? post.getInt("coronaangle", 0) : -1;
+    if(post!=null){
+      width         =post.getInt("width",1024);
+      height        =post.getInt("height",576);
+      cellsize      =post.getInt("cellsize",cellsize);
+      color_text    =post.get("colortext",   color_text);
+      color_back    =post.get("colorback",   color_back);
+      color_grid    =post.get("colorgrid",   color_grid);
+      color_dot     =post.get("colordot",    color_dot);
+      color_line    =post.get("colorline",   color_line);
+      corona        =!post.containsKey("corona")||post.getBoolean("corona");
+      coronaangle   =(corona)?post.getInt("coronaangle",0):-1;
+    }
+    if(coronaangle<0)corona=false;
+
+    // too small values lead to an error, too big to huge CPU/memory consumption, resulting in possible DOS.
+    if(width<32)width=32;
+    if(width>10000)width=10000;
+    if(height<24)height=24;
+    if(height>10000)height=10000;
+
+    final RasterPlotter.DrawMode drawMode=(RasterPlotter.darkColor(color_back))?RasterPlotter.DrawMode.MODE_ADD:RasterPlotter.DrawMode.MODE_SUB;
+    final HexGridPlotter picture=new HexGridPlotter(width,height,drawMode,color_back,cellsize);
+    picture.drawGrid(color_grid);
+
+    // calculate dimensions for left and right column
+    final int gridLeft=0;
+    int gridRight=picture.gridWidth()-2;
+    if((gridRight&1)==0)gridRight--;
+
+    // draw home peer
+    final int centerx=(picture.gridWidth()>>1)-1;
+    final int centery=picture.gridHeight()>>1;
+    long color_dot_l=Long.parseLong(color_dot,16);
+    long color_text_l=Long.parseLong(color_text,16);
+    long color_line_l=Long.parseLong(color_line,16);
+    long color_grid_l=Long.parseLong(color_grid,16);
+    picture.setColor(color_dot_l);
+    picture.gridDot(centerx,centery,5,true,100);
+    if(corona){
+      for(int i=0;i<6;i++){
+        picture.gridDot(centerx,centery,50,i*60+coronaangle/6,i*60+30+coronaangle/6);
+      }
+    }
+    else{
+      picture.gridDot(centerx,centery,50,false,100);
+    }
+    //picture.gridDot(centerx,centery,31,false);
+    picture.setColor(color_text_l);
+    picture.gridPrint(centerx,centery,5,"THIS YACY PEER","\""+sb.peers.myName().toUpperCase()+"\"",0,100);
+
+    // left column: collect data for access from outside
+    final byte verticalSlots=(picture.gridHeight()>>1)-1;
+    final String[] hosts=new String[verticalSlots];
+    final int[] time=new int[verticalSlots];
+    final int[] count=new int[verticalSlots];
+    for(byte i:hosts)hosts[i]=null;
+    for(byte i:time)time[i]=0;
+    for(byte i:count)count[i]=0;
+
+    String host;
+    int c,h;
+    for(int time2:times){
+      final Iterator<String> i=serverAccessTracker.accessHosts();
+      try{
+        while(i.hasNext()){
+          host=i.next();
+          c=serverAccessTracker.latestAccessCount(host,time2);
+          if(c>0){
+            h=(Math.abs(host.hashCode()))%hosts.length;
+            hosts[h]=host;
+            count[h]=c;
+            time[h]=time2;
+          }
         }
-        if (coronaangle < 0) corona = false;
+      }
+      catch(final ConcurrentModificationException e){
+        // we don't want to synchronize this
+        ConcurrentLog.logException(e);
+      }
+    }
 
-        // too small values lead to an error, too big to huge CPU/memory consumption, resulting in possible DOS.
-        if (width < 32 ) width = 32;
-        if (width > 10000) width = 10000;
-        if (height < 24) height = 24;
-        if (height > 10000) height = 10000;
-
-        final RasterPlotter.DrawMode drawMode = (RasterPlotter.darkColor(color_back)) ? RasterPlotter.DrawMode.MODE_ADD : RasterPlotter.DrawMode.MODE_SUB;
-        final HexGridPlotter picture = new HexGridPlotter(width, height, drawMode, color_back, cellsize);
-        picture.drawGrid(color_grid);
-
-        // calculate dimensions for left and right column
-        final int gridLeft = 0;
-        int gridRight = picture.gridWidth() - 2;
-        if ((gridRight & 1) == 0) gridRight--;
-
-        // draw home peer
-        final int centerx = (picture.gridWidth() >> 1) - 1;
-        final int centery = picture.gridHeight() >> 1;
-        long color_dot_l = Long.parseLong(color_dot, 16);
-        long color_text_l = Long.parseLong(color_text, 16);
-        long color_line_l = Long.parseLong(color_line, 16);
-        long color_grid_l = Long.parseLong(color_grid, 16);
+    // draw left column: access from outside
+    for(byte i:hosts){
+      if(hosts[i]!=null){
         picture.setColor(color_dot_l);
-        picture.gridDot(centerx, centery, 5, true, 100);
-        if (corona) {
-            for (int i = 0; i < 6; i++) {
-                picture.gridDot(centerx, centery, 50, i * 60 + coronaangle / 6, i * 60 + 30 + coronaangle / 6);
-            }
-        } else {
-            picture.gridDot(centerx, centery, 50, false, 100);
-        }
-        //picture.gridDot(centerx, centery, 31, false);
+        picture.gridDot(gridLeft,i*2+1,7,false,100);
+        picture.gridDot(gridLeft,i*2+1,8,false,100);
         picture.setColor(color_text_l);
-        picture.gridPrint(centerx, centery, 5, "THIS YACY PEER", "\"" + sb.peers.myName().toUpperCase() + "\"", 0, 100);
-
-        // left column: collect data for access from outside
-        final int verticalSlots = (picture.gridHeight() >> 1) - 1;
-        final String[] hosts = new String[verticalSlots];
-        final int[] time = new int[verticalSlots];
-        final int[] count = new int[verticalSlots];
-        for (int i = 0; i < verticalSlots; i++) {hosts[i] = null; time[i] = 0; count[i] = 0;}
-
-        String host;
-        int c, h;
-        for (final int time2 : times) {
-            final Iterator<String> i = serverAccessTracker.accessHosts();
-            try {
-                while (i.hasNext()) {
-                    host = i.next();
-                    c = serverAccessTracker.latestAccessCount(host, time2);
-                    if (c > 0) {
-                        h = (Math.abs(host.hashCode())) % hosts.length;
-                        hosts[h] = host;
-                        count[h] = c;
-                        time[h] = time2;
-                    }
-                }
-            } catch (final ConcurrentModificationException e) {
-                // we don't want to synchronize this
-                ConcurrentLog.logException(e);
-            }
-        }
-
-        // draw left column: access from outside
-        for (int i = 0; i < hosts.length; i++) {
-            if (hosts[i] != null) {
-                picture.setColor(color_dot_l);
-                picture.gridDot(gridLeft, i * 2 + 1, 7, false, 100);
-                picture.gridDot(gridLeft, i * 2 + 1, 8, false, 100);
-                picture.setColor(color_text_l);
-                picture.gridPrint(gridLeft, i * 2 + 1, 8, hosts[i].toUpperCase(), "COUNT = " + count[i] + ", TIME > " + ((time[i] >= 60000) ? ((time[i] / 60000) + " MINUTES") : ((time[i] / 1000) + " SECONDS")), -1, 100);
+        picture.gridPrint(gridLeft,i*2+1,8,hosts[i].toUpperCase(),"COUNT="+count[i]+",TIME>"+((time[i]>=60000)?((time[i]/60000)+" MINUTES"):((time[i]/1000)+" SECONDS")),-1,100);
                 if (corona) {
                     picture.gridLine((centerx - gridLeft) / 2 - 2, i * 2 + 1, gridLeft, i * 2 + 1,
                             color_line, 100, "AAAAAA", 100, 12, 11 - coronaangle / 30, 0, true);
