@@ -33,116 +33,111 @@ import net.yacy.crawler.data.CrawlProfile;
 import net.yacy.crawler.retrieval.Request;
 import net.yacy.crawler.robots.RobotsTxt;
 
-public interface Balancer {
+public interface Balancer{
 
-    /**
-     * close the balancer object
-     */
-    public void close();
+  // close the balancer object
+  public void close();
 
-    /**
-     * delete all urls from the stack
-     */
-    public void clear();
+  // delete all urls from the stack
+  public void clear();
 
-    /**
-     * get one url from the crawl stack
-     * @param urlhash
-     * @return the request for an url by given url hash
-     * @throws IOException
-     */
-    public Request get(final byte[] urlhash) throws IOException;
+  /**
+   * get one url from the crawl stack
+   * @param urlhash
+   * @return the request for an url by given url hash
+   * @throws IOException
+   */
+  public Request get(final byte[] urlhash) throws IOException;
 
-    /**
-     * delete all urls from the stack by given profile handle
-     * @param profileHandle
-     * @param timeout
-     * @return the number of removed urls
-     * @throws IOException
-     * @throws SpaceExceededException
-     */
-    public int removeAllByProfileHandle(final String profileHandle, final long timeout) throws IOException, SpaceExceededException;
+  /**
+   * delete all urls from the stack by given profile handle
+   * @param profileHandle
+   * @param timeout
+   * @return the number of removed urls
+   * @throws IOException
+   * @throws SpaceExceededException
+   */
+  public int removeAllByProfileHandle(final String profileHandle,final long timeout) throws IOException, SpaceExceededException;
 
-    /**
-     * delete all urls which are stored for given host hashes
-     * @param hosthashes
-     * @return number of deleted urls
-     */
-    public int removeAllByHostHashes(final Set<String> hosthashes);
+  /**
+   * delete all urls which are stored for given host hashes
+   * @param hosthashes
+   * @return number of deleted urls
+   */
+  public int removeAllByHostHashes(final Set<String> hosthashes);
     
-    /**
-     * @param urlHashes, a list of hashes that shall be removed
-     * @return number of entries that had been removed
-     * @throws IOException
-     */
-    public int remove(final HandleSet urlHashes) throws IOException;
+  /**
+   * @param urlHashes, a list of hashes that shall be removed
+   * @return number of entries that had been removed
+   * @throws IOException
+   */
+  public int remove(final HandleSet urlHashes) throws IOException;
 
-    /**
-     * check if given url hash is contained in the balancer stack
-     * @param urlhashb
-     * @return true if the url is queued here, false otherwise
-     */
-    public boolean has(final byte[] urlhashb);
+  /**
+   * check if given url hash is contained in the balancer stack
+   * @param urlhashb
+   * @return true if the url is queued here, false otherwise
+   */
+  public boolean has(final byte[] urlhashb);
 
-    /**
-     * get the size of the stack
-     * @return the number of urls waiting to be loaded
-     */
-    public int size();
+  /**
+   * get the size of the stack
+   * @return the number of urls waiting to be loaded
+   */
+  public int size();
 
-    public int getOnDemandLimit();
+  public int getOnDemandLimit();
 
-    public boolean getExceed134217727();
-    /**
-     * check if stack is empty
-     * @return true iff size() == 0
-     */
-    public boolean isEmpty();
+  public boolean getExceed134217727();
+  /**
+   * check if stack is empty
+   * @return true iff size() == 0
+   */
+  public boolean isEmpty();
 
-    /**
-     * push a crawl request on the balancer stack
-     * @param entry
-     * @return null if this was successful or a String explaining what went wrong in case of an error
-     * @throws IOException
-     * @throws SpaceExceededException
-     */
-    public String push(final Request entry, CrawlProfile profile, final RobotsTxt robots) throws IOException, SpaceExceededException;
+  /**
+   * push a crawl request on the balancer stack
+   * @param entry
+   * @return null if this was successful or a String explaining what went wrong in case of an error
+   * @throws IOException
+   * @throws SpaceExceededException
+  */
+  public String push(final Request entry,CrawlProfile profile,final RobotsTxt robots) throws IOException, SpaceExceededException;
 
-    /**
-     * get a list of domains that are currently maintained as domain stacks
-     * @return a map of clear text strings of host names (each host name eventually concatenated with a port, depending on the implementation) 
-     * 		to an integer array: {the size of the domain stack, guessed delta waiting time}
-     */
-    public Map<String, Integer[]> getDomainStackHosts(RobotsTxt robots);
+  /**
+   * get a list of domains that are currently maintained as domain stacks
+   * @return a map of clear text strings of host names (each host name eventually concatenated with a port, depending on the implementation) 
+   * 		to an integer array: {the size of the domain stack, guessed delta waiting time}
+   */
+  public Map<String, Integer[]> getDomainStackHosts(RobotsTxt robots);
     
-    /**
-     * get lists of crawl request entries for a specific host
-     * @param host
-     * @param maxcount
-     * @param maxtime
-     * @return a list of crawl loader requests
-     */
-    public List<Request> getDomainStackReferences(final String host, int maxcount, final long maxtime);
+  /**
+   * get lists of crawl request entries for a specific host
+   * @param host
+   * @param maxcount
+   * @param maxtime
+   * @return a list of crawl loader requests
+   */
+  public List<Request> getDomainStackReferences(final String host,int maxcount,final long maxtime);
 
-    /**
-     * get the next entry in this crawl queue in such a way that the domain access time delta is maximized
-     * and always above the given minimum delay time. An additional delay time is computed using the robots.txt
-     * crawl-delay time which is always respected. In case the minimum time cannot ensured, this method pauses
-     * the necessary time until the url is released and returned as CrawlEntry object. In case that a profile
-     * for the computed Entry does not exist, null is returned
-     * @param delay true if the requester demands forced delays using explicit thread sleep
-     * @param profile
-     * @return a url in a CrawlEntry object
-     * @throws IOException
-     * @throws SpaceExceededException
-     */
-    public Request pop(final boolean delay, final CrawlSwitchboard cs, final RobotsTxt robots) throws IOException;
+  /**
+   * get the next entry in this crawl queue in such a way that the domain access time delta is maximized
+   * and always above the given minimum delay time. An additional delay time is computed using the robots.txt
+   * crawl-delay time which is always respected. In case the minimum time cannot ensured, this method pauses
+   * the necessary time until the url is released and returned as CrawlEntry object. In case that a profile
+   * for the computed Entry does not exist, null is returned
+   * @param delay true if the requester demands forced delays using explicit thread sleep
+   * @param profile
+   * @return a url in a CrawlEntry object
+   * @throws IOException
+   * @throws SpaceExceededException
+   */
+  public Request pop(final boolean delay,final CrawlSwitchboard cs,final RobotsTxt robots) throws IOException;
 
-    /**
-     * iterate through all requests in the queue
-     * @return
-     * @throws IOException
-     */
-    public Iterator<Request> iterator() throws IOException;
-
+  /**
+   * iterate through all requests in the queue
+   * @return
+   * @throws IOException
+   */
+  public Iterator<Request> iterator() throws IOException;
 }
