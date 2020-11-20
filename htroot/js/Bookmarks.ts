@@ -18,12 +18,12 @@
 * along with YaCy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var AJAX_OFF="/env/grafics/empty.gif";
-var AJAX_ON="/env/grafics/ajax.gif";
+let AJAX_OFF:string="/env/grafics/empty.gif";
+let AJAX_ON:string="/env/grafics/ajax.gif";
 
 function handleResponse(){
     if(http.readyState == 4){
-        var response = http.responseXML;
+        let response= http.responseXML;
         title=response.getElementsByTagName("title")[0].firstChild.nodeValue;
         tags_field=document.getElementById("tags");
         document.getElementById("title").value=title;
@@ -124,7 +124,7 @@ function loadTitle(){
  * element: Das HTML-Element
  * return: Die zugeordneten Klassen.
  */
-  function treeMenu_getClasses(element) {
+  function treeMenu_getClasses<T>(element:T):T{
     if(element.className) {
       return element.className.match(/[^ \t\n\r]+/g);
     }
@@ -157,10 +157,10 @@ function loadTitle(){
  * return: Der String
  */
   function treeMenu_store(menu) {
-    var result = new Array();;
+    var result = new Array();
     var items = menu.getElementsByTagName("li");
-    for(var i = 0; i < items.length; i++) {
-      if(treeMenu_contains(treeMenu_getClasses(items[i]), "treeMenu_opened")) {
+    for(let i=0; i < items.length; i++) {
+      if(treeMenu_contains(<string>treeMenu_getClasses(items[i]), "treeMenu_opened")) {
         result.push(i);
       }
     }
