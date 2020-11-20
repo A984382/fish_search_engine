@@ -241,331 +241,311 @@ import net.yacy.utils.crypt;
 import net.yacy.utils.upnp.UPnP;
 import net.yacy.visualization.CircleTool;
 
+public final class Switchboard extends serverSwitch{
 
-
-public final class Switchboard extends serverSwitch {
-
-    final static String SOLR_COLLECTION_CONFIGURATION_NAME_OLD = "solr.keys.default.list";
-    public final static String SOLR_COLLECTION_CONFIGURATION_NAME = "solr.collection.schema";
-    public final static String SOLR_WEBGRAPH_CONFIGURATION_NAME = "solr.webgraph.schema";
+  final static String SOLR_COLLECTION_CONFIGURATION_NAME_OLD="solr.keys.default.list";
+  protected final static String SOLR_COLLECTION_CONFIGURATION_NAME="solr.collection.schema";
+  protected final static String SOLR_WEBGRAPH_CONFIGURATION_NAME="solr.webgraph.schema";
     
-    public static long lastPPMUpdate = System.currentTimeMillis() - 30000;
-    private static final int dhtMaxContainerCount = 500;
-    private int dhtMaxReferenceCount = 1000;
+  protected static long lastPPMUpdate=System.currentTimeMillis()-30000;
+  private static final short dhtMaxContainerCount=500;
+  private short dhtMaxReferenceCount=1000;
 
-    // colored list management
-    public static SortedSet<String> badwords = new TreeSet<String>(NaturalOrder.naturalComparator);
-    public static SortedSet<String> stopwords = new TreeSet<String>(NaturalOrder.naturalComparator);
-    public static SortedSet<String> blueList = null;
-    public static SortedSet<byte[]> stopwordHashes = null;
-    public static Blacklist urlBlacklist = null;
+  // colored list management
+  protected static SortedSet<String> badwords=new TreeSet<String>(NaturalOrder.naturalComparator),
+                                     stopwords=new TreeSet<String>(NaturalOrder.naturalComparator),blueList=null;
+  protected static SortedSet<byte[]> stopwordHashes=null;
+  protected static Blacklist urlBlacklist=null;
 
-    public static WikiParser wikiParser = null;
+  protected static WikiParser wikiParser=null;
 
-    // storage management
-    public File htCachePath;
-    public final File dictionariesPath, classificationPath;
-    public File listsPath;
-    public File htDocsPath;
-    public File workPath;
-    public File releasePath;
-    public File networkRoot;
-    public File queuesRoot;
-    public File surrogatesInPath;
-    public File surrogatesOutPath;
-    public Segment index;
-    public LoaderDispatcher loader;
-    public CrawlSwitchboard crawler;
-    public CrawlQueues crawlQueues;
-    public CrawlStacker crawlStacker;
-    public MessageBoard messageDB;
-    public WikiBoard wikiDB;
-    public BlogBoard blogDB;
-    public BlogBoardComments blogCommentDB;
-    public RobotsTxt robots;
-    public Map<String, Object[]> outgoingCookies, incomingCookies;
-    public volatile long proxyLastAccess, localSearchLastAccess, remoteSearchLastAccess, adminAuthenticationLastAccess, optimizeLastRun;
-    public Network yc;
-    public ResourceObserver observer;
-    public UserDB userDB;
-    public BookmarksDB bookmarksDB;
-    public WebStructureGraph webStructure;
-    public ConcurrentHashMap<String, TreeSet<Long>> localSearchTracker, remoteSearchTracker; // mappings from requesting host to a TreeSet of Long(access time)
-    public int searchQueriesRobinsonFromLocal = 0; // absolute counter of all local queries submitted on this peer from a local or autheticated used
-    public int searchQueriesRobinsonFromRemote = 0; // absolute counter of all local queries submitted on this peer from a remote IP without authentication
-    public float searchQueriesGlobal = 0f; // partial counter of remote queries (1/number-of-requested-peers)
-    public SortedSet<byte[]> clusterhashes; // a set of cluster hashes
-    public List<Pattern> networkWhitelist, networkBlacklist;
-    public FilterEngine domainList;
-    private Dispatcher dhtDispatcher;
-    public LinkedBlockingQueue<String> trail; // connect infos from cytag servlet
-    public SeedDB peers;
-    public WorkTables tables;
-    public Tray tray;
-    private long lastStats = 0; // time when the last row was written to the stats table
+  // storage management
+  protected final File dictionariesPath,classificationPath;
+  protected File htCachePath,listsPath,htDocsPath,workPath,releasePath,networkRoot,queuesRoot,surrogatesInPath,surrogatesOutPath;
+  protected Segment index;
+  protected LoaderDispatcher loader;
+  protected CrawlSwitchboard crawler;
+  protected CrawlQueues crawlQueues;
+  protected CrawlStacker crawlStacker;
+  protected MessageBoard messageDB;
+  protected WikiBoard wikiDB;
+  protected BlogBoard blogDB;
+  protected BlogBoardComments blogCommentDB;
+  protected RobotsTxt robots;
+  protected Map<String,Object[]> outgoingCookies,incomingCookies;
+  protected volatile long proxyLastAccess,localSearchLastAccess,remoteSearchLastAccess,adminAuthenticationLastAccess,optimizeLastRun;
+  protected Network yc;
+  protected ResourceObserver observer;
+  protected UserDB userDB;
+  protected BookmarksDB bookmarksDB;
+  protected WebStructureGraph webStructure;
+  protected ConcurrentHashMap<String,TreeSet<Long>> localSearchTracker,remoteSearchTracker; // mappings from requesting host to a TreeSet of Long(access time)
+  protected float searchQueriesRobinsonFromLocal=0,searchQueriesRobinsonFromRemote=0,searchQueriesGlobal=0f;
+  protected SortedSet<byte[]> clusterhashes; // a set of cluster hashes
+  protected List<Pattern> networkWhitelist,networkBlacklist;
+  protected FilterEngine domainList;
+  private Dispatcher dhtDispatcher;
+  protected LinkedBlockingQueue<String> trail; // connect infos from cytag servlet
+  protected SeedDB peers;
+  protected WorkTables tables;
+  protected Tray tray;
+  private long lastStats=0; // time when the last row was written to the stats table
 
-    public WorkflowProcessor<IndexingQueueEntry> indexingDocumentProcessor;
-    public WorkflowProcessor<IndexingQueueEntry> indexingCondensementProcessor;
-    public WorkflowProcessor<IndexingQueueEntry> indexingAnalysisProcessor;
-    public WorkflowProcessor<IndexingQueueEntry> indexingStorageProcessor;
+  protected WorkflowProcessor<IndexingQueueEntry> indexingDocumentProcessor;
+  protected WorkflowProcessor<IndexingQueueEntry> indexingCondensementProcessor;
+  protected WorkflowProcessor<IndexingQueueEntry> indexingAnalysisProcessor;
+  protected WorkflowProcessor<IndexingQueueEntry> indexingStorageProcessor;
 
-    public RobotsTxtConfig robotstxtConfig = null;
-    public boolean useTailCache;
-    public boolean exceed134217727;
+  protected RobotsTxtConfig robotstxtConfig=null;
+  protected boolean useTailCache;
+  protected boolean exceed134217727;
 
-    public final long startupTime = System.currentTimeMillis();
-    private final Semaphore shutdownSync = new Semaphore(0);
-    private boolean terminate = false;
-    private boolean startupAction = true; // this is set to false after the first event
-    private static Switchboard sb;
-    public HashMap<String, Object[]> crawlJobsStatus = new HashMap<String, Object[]>();
+  protected final long startupTime=System.currentTimeMillis();
+  protected final Semaphore shutdownSync=new Semaphore(0);
+  protected boolean terminate=0,startupAction=1;
+  protected static Switchboard sb;
+  protected HashMap<String,Object[]> crawlJobsStatus=new HashMap<String,Object[]>();
 
-    public Switchboard(final File dataPath, final File appPath, final String initPath, final String configPath) {
-        super(dataPath, appPath, initPath, configPath);
-        sb = this;
-        // check if port is already occupied
-        final int port = getLocalPort();
-        if (TimeoutRequest.ping(Domains.LOCALHOST, port, 500)) {
-            throw new RuntimeException(
-                    "a server is already running on the YaCy port "
-                    + port
-                    + "; possibly another YaCy process has not terminated yet. Please stop YaCy before running a new instance.");
-        }
+  protected Switchboard(final File dataPath,final File appPath,final String initPath,final String configPath){
+    super(dataPath,appPath,initPath,configPath);
+    sb=this;
+    // check if port is already occupied
+    final short port=getLocalPort();
+    if(TimeoutRequest.ping(Domains.LOCALHOST,port,500)){
+      throw new RuntimeException(
+        "a server is already running on the YaCy port "
+        + port
+        + "; possibly another YaCy process has not terminated yet. Please stop YaCy before running a new instance.");
+    }
 
-        MemoryTracker.startSystemProfiling();
+    MemoryTracker.startSystemProfiling();
 
-        // set loglevel and log
-        setLog(new ConcurrentLog("SWITCHBOARD"));
-        AccessTracker.setDumpFile(new File(dataPath, "DATA/LOG/queries.log"));
+    // set loglevel and log
+    setLog(new ConcurrentLog("SWITCHBOARD"));
+    AccessTracker.setDumpFile(new File(dataPath,"DATA/LOG/queries.log"));
 
-        // set default peer name
-        Seed.ANON_PREFIX = getConfig("peernameprefix", "_anon");
+    // set default peer name
+    Seed.ANON_PREFIX=getConfig("peernameprefix","_anon");
 
-        // set timeoutrequests
-        boolean timeoutrequests = getConfigBool("timeoutrequests", true);
-        TimeoutRequest.enable = timeoutrequests;
+    // set timeoutrequests
+    boolean timeoutrequests=getConfigBool("timeoutrequests",1);
+    TimeoutRequest.enable=timeoutrequests;
         
-        // UPnP port mapping
-        if ( getConfigBool(SwitchboardConstants.UPNP_ENABLED, false) ) {
-        	new OneTimeBusyThread("UPnP.addPortMappings") {
-				
-				@Override
-				public boolean jobImpl() throws Exception {
-					UPnP.addPortMappings();
-					return true;
-				}
-			}.start();
+    // UPnP port mapping
+    if(getConfigBool(SwitchboardConstants.UPNP_ENABLED,0)){
+      new OneTimeBusyThread("UPnP.addPortMappings"){
+        @Override
+        public boolean jobImpl() throws Exception{
+          UPnP.addPortMappings();
+          return 1;
         }
+      }.start();
+    }
 
-        // init TrayIcon if possible
-        this.tray = new Tray(this);
+    // init TrayIcon if possible
+    this.tray = new Tray(this);
 
-        // remote proxy configuration
-        initRemoteProxy();
+    // remote proxy configuration
+    initRemoteProxy();
 
-        // memory configuration
-        long tableCachingLimit = getConfigLong("tableCachingLimit", 419430400L);
-        if ( MemoryControl.available() > tableCachingLimit ) {
-            this.useTailCache = true;
+    // memory configuration
+    long tableCachingLimit=getConfigLong("tableCachingLimit",419430400L);
+    if(MemoryControl.available()>tableCachingLimit){
+      this.useTailCache=1;
+    }
+    this.exceed134217727=getConfigBool("exceed134217727",1);
+    if(MemoryControl.available()>1024L*1024L*1024L*2L){
+      this.exceed134217727=1;
+    }
+
+    // load values from configs
+    final File indexPath=getDataPath(SwitchboardConstants.INDEX_PRIMARY_PATH,SwitchboardConstants.INDEX_PATH_DEFAULT),
+	       archivePath=getDataPath(SwitchboardConstants.INDEX_ARCHIVE_PATH,SwitchboardConstants.INDEX_ARCHIVE_DEFAULT);
+    this.log.config("Index Primary Path: "+indexPath.toString());
+    this.log.config("Index Archive Path: "+archivePath.toString());
+    this.listsPath=getDataPath(SwitchboardConstants.LISTS_PATH,SwitchboardConstants.LISTS_PATH_DEFAULT);
+    this.log.config("Lists Path:     "+this.listsPath.toString());
+    this.htDocsPath=getDataPath(SwitchboardConstants.HTDOCS_PATH,SwitchboardConstants.HTDOCS_PATH_DEFAULT);
+    this.log.config("HTDOCS Path:    "+this.htDocsPath.toString());
+    this.workPath=getDataPath(SwitchboardConstants.WORK_PATH,SwitchboardConstants.WORK_PATH_DEFAULT);
+    this.workPath.mkdirs();
+    // if default work files exist, copy them (don't overwrite existing!)
+    File defaultWorkPath=new File(appPath, "defaults/data/work");
+    if(defaultWorkPath.list()!=null){
+      for(String fs:defaultWorkPath.list()){
+        File wf=new File(this.workPath,fs);
+        if(!wf.exists()){
+          try{
+            Files.copy(new File(defaultWorkPath,fs),wf);
+          }catch(final IOException e){
+            ConcurrentLog.logException(e);
+          }
         }
-        this.exceed134217727 = getConfigBool("exceed134217727", true);
-        if ( MemoryControl.available() > 1024L * 1024L * 1024L * 2L ) {
-            this.exceed134217727 = true;
-        }
-
-        // load values from configs
-        final File indexPath = getDataPath(SwitchboardConstants.INDEX_PRIMARY_PATH, SwitchboardConstants.INDEX_PATH_DEFAULT);
-        this.log.config("Index Primary Path: " + indexPath.toString());
-        final File archivePath = getDataPath(SwitchboardConstants.INDEX_ARCHIVE_PATH, SwitchboardConstants.INDEX_ARCHIVE_DEFAULT);
-        this.log.config("Index Archive Path: " + archivePath.toString());
-        this.listsPath =
-            getDataPath(SwitchboardConstants.LISTS_PATH, SwitchboardConstants.LISTS_PATH_DEFAULT);
-        this.log.config("Lists Path:     " + this.listsPath.toString());
-        this.htDocsPath =
-            getDataPath(SwitchboardConstants.HTDOCS_PATH, SwitchboardConstants.HTDOCS_PATH_DEFAULT);
-        this.log.config("HTDOCS Path:    " + this.htDocsPath.toString());
-        this.workPath = getDataPath(SwitchboardConstants.WORK_PATH, SwitchboardConstants.WORK_PATH_DEFAULT);
-        this.workPath.mkdirs();
-        // if default work files exist, copy them (don't overwrite existing!)
-        File defaultWorkPath = new File(appPath, "defaults/data/work");
-        if (defaultWorkPath.list() != null) {
-            for (String fs : defaultWorkPath.list()) {
-                File wf = new File(this.workPath, fs);
-                if (!wf.exists()) {
-                    try {
-                        Files.copy(new File(defaultWorkPath, fs), wf);
-                    } catch (final IOException e) {
-                        ConcurrentLog.logException(e);
-                    }
-                }
-            }
-        }
+      }
+    }
         
-        this.log.config("Work Path:    " + this.workPath.toString());
+    this.log.config("Work Path:    "+this.workPath.toString());
 
-        this.dictionariesPath =
+    this.dictionariesPath=getDataPath(
+            SwitchboardConstants.DICTIONARY_SOURCE_PATH,
+            SwitchboardConstants.DICTIONARY_SOURCE_PATH_DEFAULT);
+    this.log.config("Dictionaries Path:"+this.dictionariesPath.toString());
+    if(!this.dictionariesPath.exists())this.dictionariesPath.mkdirs();
+        
+    this.classificationPath =
             getDataPath(
-                SwitchboardConstants.DICTIONARY_SOURCE_PATH,
-                SwitchboardConstants.DICTIONARY_SOURCE_PATH_DEFAULT);
-        this.log.config("Dictionaries Path:" + this.dictionariesPath.toString());
-        if (!this.dictionariesPath.exists()) this.dictionariesPath.mkdirs();
-        
-        this.classificationPath =
-                getDataPath(
-                    SwitchboardConstants.CLASSIFICATION_SOURCE_PATH,
-                    SwitchboardConstants.CLASSIFICATION_SOURCE_PATH_DEFAULT);
-            this.log.config("Classification Path:" + this.classificationPath.toString());
-        if (!this.classificationPath.exists()) this.classificationPath.mkdirs();
+                SwitchboardConstants.CLASSIFICATION_SOURCE_PATH,
+                SwitchboardConstants.CLASSIFICATION_SOURCE_PATH_DEFAULT);
+    this.log.config("Classification Path:"+this.classificationPath.toString());
+    if(!this.classificationPath.exists())this.classificationPath.mkdirs();
 
-        CollectionConfiguration.UNIQUE_HEURISTIC_PREFER_HTTPS = this.getConfigBool("search.ranking.uniqueheuristic.preferhttps", false);
-        CollectionConfiguration.UNIQUE_HEURISTIC_PREFER_WWWPREFIX = this.getConfigBool("search.ranking.uniqueheuristic.preferwwwprefix", true);
+    CollectionConfiguration.UNIQUE_HEURISTIC_PREFER_HTTPS=this.getConfigBool("search.ranking.uniqueheuristic.preferhttps",0);
+    CollectionConfiguration.UNIQUE_HEURISTIC_PREFER_WWWPREFIX=this.getConfigBool("search.ranking.uniqueheuristic.preferwwwprefix",1);
         
         
-        // init libraries
-        this.log.config("initializing libraries");
-        new Thread("LibraryProvider.initialize") {
-            @Override
-            public void run() {
-                LibraryProvider.initialize(Switchboard.this.dictionariesPath);
-                // persistent Vocabulary Switches
-                final Set<String> omit = Switchboard.this.getConfigSet("search.result.show.vocabulary.omit");
-                for (final String o: omit) {
-                    final Tagging t = LibraryProvider.autotagging.getVocabulary(o);
-                    if (t != null) {
-                    	t.setFacet(false);
-                    } else {
-                    	log.config("search.result.show.vocabulary.omit configuration value contains an unknown vocabulary name : " + o);
-                    }
-                }
-                
-				final Set<String> linkedDataVocs = Switchboard.this
-						.getConfigSet(SwitchboardConstants.VOCABULARIES_MATCH_LINKED_DATA_NAMES);
-				for (final String vocName : linkedDataVocs) {
-					final Tagging t = LibraryProvider.autotagging.getVocabulary(vocName);
-					if (t != null) {
-						t.setMatchFromLinkedData(true);
-					} else {
-						log.config(SwitchboardConstants.VOCABULARIES_MATCH_LINKED_DATA_NAMES
-								+ " configuration value contains an unknown vocabulary name : " + vocName);
-					}
-				}
-
-                Thread.currentThread().setName("ProbabilisticClassification.initialize");
-                ProbabilisticClassifier.initialize(Switchboard.this.classificationPath);
-            }
-        }.start();
-        
-        // init the language detector
-        this.log.config("Loading language profiles");
-        try {
-			DetectorFactory.loadProfile(new File(appPath, "langdetect").toString());
-		} catch (LangDetectException e) {
-			ConcurrentLog.logException(e);
-		}
-
-        // init global host name cache
-        Domains.init(new File(this.workPath, "globalhosts.list"));
-
-        // init sessionid name file
-        final String sessionidNamesFile = getConfig("sessionidNamesFile", "defaults/sessionid.names");
-        this.log.config("Loading sessionid file " + sessionidNamesFile);
-        MultiProtocolURL.initSessionIDNames(FileUtils.loadList(new File(getAppPath(), sessionidNamesFile)));
-
-        // init tables
-        this.tables = new WorkTables(this.workPath);
-
-        // set a high maximum cache size to current size; this is adopted later automatically
-        final int wordCacheMaxCount = (int) getConfigLong(SwitchboardConstants.WORDCACHE_MAX_COUNT, 20000);
-        setConfig(SwitchboardConstants.WORDCACHE_MAX_COUNT, Integer.toString(wordCacheMaxCount));
-        
-        /* Init outgoing connections clients with user defined settings */
-        initOutgoingConnectionSettings();
-        
-        /* Init outgoing connections pools with user defined settings */
-		initOutgoingConnectionPools();
-
-        // load the network definition
-        try {
-            overwriteNetworkDefinition(getSysinfo());
-        } catch (final FileNotFoundException e) {
-            ConcurrentLog.logException(e);
-        } catch (final IOException e) {
-            ConcurrentLog.logException(e);
+    // init libraries
+    this.log.config("initializing libraries");
+    new Thread("LibraryProvider.initialize"){
+      @Override
+      public void run(){
+        LibraryProvider.initialize(Switchboard.this.dictionariesPath);
+        // persistent Vocabulary Switches
+        final Set<String> omit=Switchboard.this.getConfigSet("search.result.show.vocabulary.omit");
+        for(final String o:omit){
+          final Tagging t=LibraryProvider.autotagging.getVocabulary(o);
+          if(t!=null){
+            t.setFacet(0);
+          }else{
+            log.config("search.result.show.vocabulary.omit configuration value contains an unknown vocabulary name: "+o);
+          }
         }
-        // create custom user agent
-        ClientIdentification.generateCustomBot(
-                getConfig(SwitchboardConstants.CRAWLER_USER_AGENT_NAME, ""),
-                getConfig(SwitchboardConstants.CRAWLER_USER_AGENT_STRING, ""),
-                (int) getConfigLong(SwitchboardConstants.CRAWLER_USER_AGENT_MINIMUMDELTA, 500),
-                (int) getConfigLong(SwitchboardConstants.CRAWLER_USER_AGENT_CLIENTTIMEOUT , 1000));
+                
+        final Set<String> linkedDataVocs=Switchboard.this.getConfigSet(SwitchboardConstants.VOCABULARIES_MATCH_LINKED_DATA_NAMES);
+        for(final String vocName:linkedDataVocs){
+          final Tagging t=LibraryProvider.autotagging.getVocabulary(vocName);
+          if(t!=null){
+            t.setMatchFromLinkedData(1);
+          }else{
+            log.config(SwitchboardConstants.VOCABULARIES_MATCH_LINKED_DATA_NAMES+" configuration value contains an unknown vocabulary name: "+vocName);
+          }
+        }
+
+        Thread.currentThread().setName("ProbabilisticClassification.initialize");
+        ProbabilisticClassifier.initialize(Switchboard.this.classificationPath);
+      }
+    }.start();
+
+    // init the language detector
+    this.log.config("Loading language profiles");
+    try{
+      DetectorFactory.loadProfile(new File(appPath,"langdetect").toString());
+    }catch(LangDetectException e){
+      ConcurrentLog.logException(e);
+    }
+
+    // init global host name cache
+    Domains.init(new File(this.workPath,"globalhosts.list"));
+
+    // init sessionid name file
+    final String sessionidNamesFile=getConfig("sessionidNamesFile","defaults/sessionid.names");
+    this.log.config("Loading sessionid file "+sessionidNamesFile);
+    MultiProtocolURL.initSessionIDNames(FileUtils.loadList(new File(getAppPath(),sessionidNamesFile)));
+
+    // init tables
+    this.tables=new WorkTables(this.workPath);
+
+    // set a high maximum cache size to current size; this is adopted later automatically
+    final int wordCacheMaxCount=(int)getConfigLong(SwitchboardConstants.WORDCACHE_MAX_COUNT,20000);
+    setConfig(SwitchboardConstants.WORDCACHE_MAX_COUNT,Integer.toString(wordCacheMaxCount));
         
-        // start indexing management
-        this.log.config("Starting Indexing Management");
-        final String networkName = getConfig(SwitchboardConstants.NETWORK_NAME, "");
-        final long fileSizeMax = (OS.isWindows) ? this.getConfigLong("filesize.max.win", Integer.MAX_VALUE) : this.getConfigLong( "filesize.max.other", Integer.MAX_VALUE);
-        final int redundancy = (int) this.getConfigLong("network.unit.dhtredundancy.senior", 1);
-        final int partitionExponent = (int) this.getConfigLong("network.unit.dht.partitionExponent", 0);
-        this.networkRoot = new File(new File(indexPath, networkName), "NETWORK");
-        this.queuesRoot = new File(new File(indexPath, networkName), "QUEUES");
-        this.networkRoot.mkdirs();
-        this.queuesRoot.mkdirs();
-
-        // prepare a solr index profile switch list
-        final File solrCollectionConfigurationInitFile = new File(getAppPath(),  "defaults/" + SOLR_COLLECTION_CONFIGURATION_NAME);
-        final File solrCollectionConfigurationWorkFile = new File(getDataPath(), "DATA/SETTINGS/" + SOLR_COLLECTION_CONFIGURATION_NAME);
-        final File solrWebgraphConfigurationInitFile   = new File(getAppPath(),  "defaults/" + SOLR_WEBGRAPH_CONFIGURATION_NAME);
-        final File solrWebgraphConfigurationWorkFile   = new File(getDataPath(), "DATA/SETTINGS/" + SOLR_WEBGRAPH_CONFIGURATION_NAME);
-        CollectionConfiguration solrCollectionConfigurationWork = null;
-        WebgraphConfiguration solrWebgraphConfigurationWork = null;
-
-        // migrate the old Schema file path to a new one
-        final File solrCollectionConfigurationWorkOldFile = new File(getDataPath(), "DATA/SETTINGS/" + SOLR_COLLECTION_CONFIGURATION_NAME_OLD);
-        if (solrCollectionConfigurationWorkOldFile.exists() && !solrCollectionConfigurationWorkFile.exists()) solrCollectionConfigurationWorkOldFile.renameTo(solrCollectionConfigurationWorkFile);
-
-        // initialize the collection schema if it does not yet exist
-        if (!solrCollectionConfigurationWorkFile.exists()) try {
-            Files.copy(solrCollectionConfigurationInitFile, solrCollectionConfigurationWorkFile);
-        } catch (final IOException e) {ConcurrentLog.logException(e);}
-
-        // lazy definition of schema: do not write empty fields
-        final boolean solrlazy = getConfigBool(SwitchboardConstants.FEDERATED_SERVICE_SOLR_INDEXING_LAZY, true);
-
-        // define collection schema
-        try {
-            final CollectionConfiguration solrCollectionConfigurationInit = new CollectionConfiguration(solrCollectionConfigurationInitFile, solrlazy);
-            solrCollectionConfigurationWork = new CollectionConfiguration(solrCollectionConfigurationWorkFile, solrlazy);
-            // update the working scheme with the backup scheme. This is necessary to include new features.
-            // new features are always activated by default (if activated in input-backupScheme)
-            solrCollectionConfigurationWork.fill(solrCollectionConfigurationInit, true);
-            solrCollectionConfigurationWork.commit();
-        } catch (final IOException e) {ConcurrentLog.logException(e);}
+    // Init outgoing connections clients with user defined settings
+    initOutgoingConnectionSettings();
         
-        // initialize the webgraph schema if it does not yet exist
-        if (!solrWebgraphConfigurationWorkFile.exists()) try {
-            Files.copy(solrWebgraphConfigurationInitFile, solrWebgraphConfigurationWorkFile);
-        } catch (final IOException e) {ConcurrentLog.logException(e);}
-        
-        // define webgraph schema
-        try {
-            final WebgraphConfiguration solrWebgraphConfigurationInit = new WebgraphConfiguration(solrWebgraphConfigurationInitFile, solrlazy);
-            solrWebgraphConfigurationWork = new WebgraphConfiguration(solrWebgraphConfigurationWorkFile, solrlazy);
-            solrWebgraphConfigurationWork.fill(solrWebgraphConfigurationInit, true);
-            solrWebgraphConfigurationWork.commit();
-        } catch (final IOException e) {ConcurrentLog.logException(e);}
+    // Init outgoing connections pools with user defined settings
+    initOutgoingConnectionPools();
 
-        // define boosts
-        Ranking.setMinTokenLen(this.getConfigInt(SwitchboardConstants.SEARCH_RANKING_SOLR_DOUBLEDETECTION_MINLENGTH, 3));
-        Ranking.setQuantRate(this.getConfigFloat(SwitchboardConstants.SEARCH_RANKING_SOLR_DOUBLEDETECTION_QUANTRATE, 0.5f));
-        for (int i = 0; i <= 3; i++) {
-            // must be done every time the boosts change
-            Ranking r = solrCollectionConfigurationWork.getRanking(i);
-            String name = this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTNAME_ + i, "_dummy" + i);
-            String boosts = this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTFIELDS_ + i, "text_t^1.0");
-            String fq = this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_FILTERQUERY_ + i, "");
-            String bq = this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTQUERY_ + i, "");
-            String bf = this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTFUNCTION_ + i, "");
-            // apply some hard-coded patches for earlier experiments we do not want any more
-            if (bf.equals("product(recip(rord(last_modified),1,1000,1000),div(product(log(product(references_external_i,references_exthosts_i)),div(references_internal_i,host_extent_i)),add(crawldepth_i,1)))") ||
+    // load the network definition
+    try{overwriteNetworkDefinition(getSysinfo());}
+    catch(final FileNotFoundException e){ConcurrentLog.logException(e);}
+    catch(final IOException e){ConcurrentLog.logException(e);}
+    // create custom user agent
+    ClientIdentification.generateCustomBot(
+            getConfig(SwitchboardConstants.CRAWLER_USER_AGENT_NAME,""),
+            getConfig(SwitchboardConstants.CRAWLER_USER_AGENT_STRING,""),
+            (int)getConfigLong(SwitchboardConstants.CRAWLER_USER_AGENT_MINIMUMDELTA,500),
+            (int)getConfigLong(SwitchboardConstants.CRAWLER_USER_AGENT_CLIENTTIMEOUT,1000));
+
+    // start indexing management
+    this.log.config("Starting Indexing Management");
+    final String networkName=getConfig(SwitchboardConstants.NETWORK_NAME,"");
+    final long fileSizeMax=(OS.isWindows) ? this.getConfigLong("filesize.max.win",Integer.MAX_VALUE) : this.getConfigLong("filesize.max.other",Integer.MAX_VALUE);
+    final int redundancy=(int)this.getConfigLong("network.unit.dhtredundancy.senior",1),
+              partitionExponent=(int)this.getConfigLong("network.unit.dht.partitionExponent",0);
+    this.networkRoot=new File(new File(indexPath,networkName),"NETWORK");
+    this.queuesRoot=new File(new File(indexPath,networkName),"QUEUES");
+    this.networkRoot.mkdirs();
+    this.queuesRoot.mkdirs();
+
+    // prepare a solr index profile switch list
+    final File solrCollectionConfigurationInitFile=new File(getAppPath(),  "defaults/"+SOLR_COLLECTION_CONFIGURATION_NAME),
+               solrCollectionConfigurationWorkFile=new File(getDataPath(), "DATA/SETTINGS/"+SOLR_COLLECTION_CONFIGURATION_NAME),
+               solrWebgraphConfigurationInitFile  =new File(getAppPath(),  "defaults/"+SOLR_WEBGRAPH_CONFIGURATION_NAME),
+               solrWebgraphConfigurationWorkFile  =new File(getDataPath(), "DATA/SETTINGS/"+SOLR_WEBGRAPH_CONFIGURATION_NAME);
+    CollectionConfiguration solrCollectionConfigurationWork=null;
+    WebgraphConfiguration solrWebgraphConfigurationWork=null;
+
+    // migrate the old Schema file path to a new one
+    final File solrCollectionConfigurationWorkOldFile=new File(getDataPath(),"DATA/SETTINGS/"+SOLR_COLLECTION_CONFIGURATION_NAME_OLD);
+    if(solrCollectionConfigurationWorkOldFile.exists() && !solrCollectionConfigurationWorkFile.exists()){
+      solrCollectionConfigurationWorkOldFile.renameTo(solrCollectionConfigurationWorkFile);
+    }
+
+    // initialize the collection schema if it does not yet exist
+    if(!solrCollectionConfigurationWorkFile.exists()){
+      try{
+        Files.copy(solrCollectionConfigurationInitFile, solrCollectionConfigurationWorkFile);
+      }catch(final IOException e){ConcurrentLog.logException(e);}
+    }
+    // lazy definition of schema: do not write empty fields
+    final boolean solrlazy=getConfigBool(SwitchboardConstants.FEDERATED_SERVICE_SOLR_INDEXING_LAZY,1);
+
+    // define collection schema
+    try{
+      final CollectionConfiguration solrCollectionConfigurationInit=new CollectionConfiguration(solrCollectionConfigurationInitFile,solrlazy);
+      solrCollectionConfigurationWork=new CollectionConfiguration(solrCollectionConfigurationWorkFile,solrlazy);
+      // update the working scheme with the backup scheme. This is necessary to include new features.
+      // new features are always activated by default (if activated in input-backupScheme)
+      solrCollectionConfigurationWork.fill(solrCollectionConfigurationInit,true);
+      solrCollectionConfigurationWork.commit();
+    }catch(final IOException e){ConcurrentLog.logException(e);}
+        
+    // initialize the webgraph schema if it does not yet exist
+    if(!solrWebgraphConfigurationWorkFile.exists()){
+      try{
+        Files.copy(solrWebgraphConfigurationInitFile,solrWebgraphConfigurationWorkFile);
+      }catch(final IOException e){ConcurrentLog.logException(e);}
+        
+      // define webgraph schema
+      try{
+        final WebgraphConfiguration solrWebgraphConfigurationInit=new WebgraphConfiguration(solrWebgraphConfigurationInitFile,solrlazy);
+        solrWebgraphConfigurationWork=new WebgraphConfiguration(solrWebgraphConfigurationWorkFile,solrlazy);
+        solrWebgraphConfigurationWork.fill(solrWebgraphConfigurationInit,true);
+        solrWebgraphConfigurationWork.commit();
+      }catch(final IOException e){ConcurrentLog.logException(e);}
+
+      // define boosts
+      Ranking.setMinTokenLen(this.getConfigInt(SwitchboardConstants.SEARCH_RANKING_SOLR_DOUBLEDETECTION_MINLENGTH,3));
+      Ranking.setQuantRate(this.getConfigFloat(SwitchboardConstants.SEARCH_RANKING_SOLR_DOUBLEDETECTION_QUANTRATE,0.5f));
+      for(byte i=0;i<=3;++i){
+        // must be done every time the boosts change
+        Ranking r=solrCollectionConfigurationWork.getRanking(i);
+        String name=this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTNAME_+i,"_dummy"+i);
+        String boosts=this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTFIELDS_+i,"text_t^1.0");
+        String fq=this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_FILTERQUERY_+i,"");
+        String bq=this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTQUERY_+i,"");
+        String bf=this.getConfig(SwitchboardConstants.SEARCH_RANKING_SOLR_COLLECTION_BOOSTFUNCTION_+i,"");
+          // apply some hard-coded patches for earlier experiments we do not want any more
+          if(bf.equals("product(recip(rord(last_modified),1,1000,1000),div(product(log(product(references_external_i,references_exthosts_i)),div(references_internal_i,host_extent_i)),add(crawldepth_i,1)))") ||
                 bf.equals("scale(cr_host_norm_i,1,20)")) bf = "";
             if (bf.equals("recip(rord(last_modified),1,1000,1000)")) bf = "recip(ms(NOW,last_modified),3.16e-11,1,1)"; // that was an outdated date boost that did not work well
             if (i == 0 && bq.equals("fuzzy_signature_unique_b:true^100000.0")) bq = "crawldepth_i:0^0.8 crawldepth_i:1^0.4";
@@ -3252,12 +3232,22 @@ public final class Switchboard extends serverSwitch {
                 return new IndexingQueueEntry(in.queueEntry, in.documents, null);
             }
         }
-        if (!(profile.indexUrlMustMatchPattern() == CrawlProfile.MATCH_ALL_PATTERN || profile.indexUrlMustMatchPattern().matcher(urls).matches()) ||
+        if(!(profile.indexUrlMustMatchPattern() == CrawlProfile.MATCH_ALL_PATTERN || profile.indexUrlMustMatchPattern().matcher(urls).matches()) ||
              (profile.indexUrlMustNotMatchPattern() != CrawlProfile.MATCH_NEVER_PATTERN && profile.indexUrlMustNotMatchPattern().matcher(urls).matches())) {
-            if (this.log.isInfo()) this.log.info("Not Condensed Resource '" + urls + "': indexing prevented by regular expression on url; indexUrlMustMatchPattern = " + profile.indexUrlMustMatchPattern().pattern() + ", indexUrlMustNotMatchPattern = " + profile.indexUrlMustNotMatchPattern().pattern());
+            if(this.log.isInfo())this.log.info("Not Condensed Resource '"+urls
+                                               +"': indexing prevented by regular expression on url; indexUrlMustMatchPattern="
+                                               +profile.indexUrlMustMatchPattern().pattern()
+                                               +", indexUrlMustNotMatchPattern="+profile.indexUrlMustNotMatchPattern().pattern());
             // create a new errorURL DB entry
-            this.crawlQueues.errorURL.push(in.queueEntry.url(), in.queueEntry.depth(), profile, FailCategory.FINAL_PROCESS_CONTEXT, "indexing prevented by regular expression on url; indexUrlMustMatchPattern = " + profile.indexUrlMustMatchPattern().pattern() + ", indexUrlMustNotMatchPattern = " + profile.indexUrlMustNotMatchPattern().pattern(), -1);
-            return new IndexingQueueEntry(in.queueEntry, in.documents, null);
+            this.crawlQueues.errorURL.push(
+              in.queueEntry.url(),
+              in.queueEntry.depth(),
+              profile,
+              FailCategory.FINAL_PROCESS_CONTEXT,
+              "indexing prevented by regular expression on url; indexUrlMustMatchPattern="
+              +profile.indexUrlMustMatchPattern().pattern()+",
+              indexUrlMustNotMatchPattern="+profile.indexUrlMustNotMatchPattern().pattern(),-1);
+            return new IndexingQueueEntry(in.queueEntry, in.documents,null);
         }
         
         // check which files may take part in the indexing process
@@ -3271,9 +3261,19 @@ public final class Switchboard extends serverSwitch {
             }
             if (!(profile.indexContentMustMatchPattern() == CrawlProfile.MATCH_ALL_PATTERN || profile.indexContentMustMatchPattern().matcher(document.getTextString()).matches()) ||
                  (profile.indexContentMustNotMatchPattern() != CrawlProfile.MATCH_NEVER_PATTERN && profile.indexContentMustNotMatchPattern().matcher(document.getTextString()).matches())) {
-                if (this.log.isInfo()) this.log.info("Not Condensed Resource '" + urls + "': indexing prevented by regular expression on content; indexContentMustMatchPattern = " + profile.indexContentMustMatchPattern().pattern() + ", indexContentMustNotMatchPattern = " + profile.indexContentMustNotMatchPattern().pattern());
+                if(this.log.isInfo())this.log.info("Not Condensed Resource '"
+                                                   +urls+"': indexing prevented by regular expression on content; indexContentMustMatchPattern="
+                                                   +profile.indexContentMustMatchPattern().pattern()
+                                                   +", indexContentMustNotMatchPattern="
+                                                   +profile.indexContentMustNotMatchPattern().pattern());
                 // create a new errorURL DB entry
-                this.crawlQueues.errorURL.push(in.queueEntry.url(), in.queueEntry.depth(), profile, FailCategory.FINAL_PROCESS_CONTEXT, "indexing prevented by regular expression on content; indexContentMustMatchPattern = " + profile.indexContentMustMatchPattern().pattern() + ", indexContentMustNotMatchPattern = " + profile.indexContentMustNotMatchPattern().pattern(), -1);
+                this.crawlQueues.errorURL.push(in.queueEntry.url(),
+                                               in.queueEntry.depth(),
+                                               profile,
+                                               FailCategory.FINAL_PROCESS_CONTEXT,
+                                               "indexing prevented by regular expression on content; indexContentMustMatchPattern="
+                                               +profile.indexContentMustMatchPattern().pattern()
+                                               +", indexContentMustNotMatchPattern="+profile.indexContentMustNotMatchPattern().pattern(),-1);
                 continue docloop;
             }
             
