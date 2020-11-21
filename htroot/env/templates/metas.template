@@ -41,17 +41,20 @@ for the JavaScript code in this page.
 */
   </script>
 
-  <script src="#[relativeBase]#env/bootstrap/js/jquery.min.js"></script>
-  <script src="#[relativeBase]#env/bootstrap/js/bootstrap.min.js"></script>
-  <script src="#[relativeBase]#env/bootstrap/js/bootstrap-switch.min.js"></script>
+  <script src="#[relativeBase]#env/bootstrap/js/jquery.min.js" defer="defer" async="async"></script>
+  <script src="#[relativeBase]#env/bootstrap/js/bootstrap.min.js" defer="defer" async="async"></script>
+  <script src="#[relativeBase]#env/bootstrap/js/bootstrap-switch.min.js" defer="defer" async="async"></script>
   
   <!-- Custom styles for this template, i.e. navigation (move this to base.css) -->
   <link href="#[relativeBase]#env/bootstrap-base.css" rel="stylesheet">
-    
+  
+  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  
   <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
   <!--[if lt IE 9]>
-    <script src="#[relativeBase]#env/bootstrap/js/html5shiv.min.js"></script>
-    <script src="#[relativeBase]#env/bootstrap/js/respond.min.js"></script>
+    <script async="async" defer="defer" src="#[relativeBase]#env/bootstrap/js/html5shiv.min.js"></script>
+    <script async="async" defer="defer" src="#[relativeBase]#env/bootstrap/js/respond.min.js"></script>
   <![endif]-->
 
   <!-- old css styles -->
