@@ -8,6 +8,7 @@
         float:left;
       }
     </style>
+
     <script type="text/javascript">
       <!--
       imagestub="AccessPicture_p.png?width=1024&height=576&colorback=FFFFFF&amp;colortext=AAAAAA&amp;colorgrid=333333&amp;colordot=33CC33&amp;colorline=555555&ct=5000&coronaangle=";
@@ -43,22 +44,24 @@
         }
       }
       -->
-    </script>
-    
+      const body=(
+        #%env/templates/header.template%#
+        #%env/templates/submenuAccessTracker.template%#
+        <h2>Server Access Grid</h2>
+        <p>This images shows incoming connections to your YaCy peer and outgoing connections from your peer to other peers and web servers</p>
+        <div class="left">
+          <p>
+            <a href="AccessPicture_p.png?width=1024&amp;height=576&amp;colorback=FFFFFF&amp;colortext=AAAAAA&amp;colorgrid=333333&amp;colordot=33CC33&amp;colorline=555555">
+              <img id="AccessPicture" src="AccessPicture_p.png?width=1024&amp;height=576&amp;bgcolor=FFFFFF&amp;coronaangle=0" alt="YaCy Access Grid" width="1024" height="576"/>
+            </a>
+          </p>
+        </div>
+        #%env/templates/footer.template%#
+      );
+      ReactDOM.render(body,document.getElementById('Network'));
+    </script>  
   </head>
+
   <body id="Network">
-    #%env/templates/header.template%#
-    #%env/templates/submenuAccessTracker.template%#
-    <h2>Server Access Grid</h2>
-    <p>This images shows incoming connections to your YaCy peer and outgoing connections from your peer to other peers and web servers</p>
-    <div class="left">
-      <p>
-        <a href="AccessPicture_p.png?width=1024&amp;height=576&amp;colorback=FFFFFF&amp;colortext=AAAAAA&amp;colorgrid=333333&amp;colordot=33CC33&amp;colorline=555555"><img id="AccessPicture" src="AccessPicture_p.png?width=1024&amp;height=576&amp;bgcolor=FFFFFF&amp;coronaangle=0" alt="YaCy Access Grid" width="1024" height="576" /></a>
-      </p>
-    </div>
-    
-    #%env/templates/footer.template%#
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
   </body>
 </html>
