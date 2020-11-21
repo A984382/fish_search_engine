@@ -10,6 +10,8 @@
     </style>
 
     <script type="text/javascript">
+      import {React} from 'react';
+      import {ReactDOM} from 'react-dom';
       <!--
       imagestub="AccessPicture_p.png?width=1024&height=576&colorback=FFFFFF&amp;colortext=AAAAAA&amp;colorgrid=333333&amp;colordot=33CC33&amp;colorline=555555&ct=5000&coronaangle=";
       imageanimindex=0;
@@ -20,10 +22,10 @@
       setTimeout("doanimation()",1000);
       function initanimation(){
         handle=new Date().getTime();
-        for(j=0;j<6;j++)initanimationphase(j, handle);
+        for(j=0;j<6;j++)initanimationphase(j,handle);
       }
       function initanimationphase(phase, handle) {
-        imagearray[phase]=new Image(1024, 576);
+        imagearray[phase]=new Image(1024,576);
         angle=phase*60;
         imagearray[phase].src=imagestub+angle+"&handle="+handle;
       }
@@ -58,7 +60,7 @@
         </div>
         #%env/templates/footer.template%#
       );
-      ReactDOM.render(body,document.getElementById('Network'));
+      ReactDOM.render(body,document.getElementsByTagName('body'));
     </script>  
   </head>
 
