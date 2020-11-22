@@ -39,6 +39,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 @licend  The above is the entire license notice
 for the JavaScript code in this page.
 */
+    import {React} from 'react';
+    import {ReactDOM} from 'react-dom';
   </script>
 
   <script type="text/typescript" src="#[relativeBase]#env/bootstrap/js/jquery.min.js" defer="defer" async="async"></script>
