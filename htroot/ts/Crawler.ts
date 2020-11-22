@@ -38,23 +38,21 @@ var runningCrawlsLegend;
 var debug;
 
 function initCrawler(){
-	initCrawlProfiles();
-	
-    refresh();
-    //loadInterval=window.setInterval("refresh()", refreshInterval*1000);
-    countInterval=window.setInterval("countdown()", 1000);
-}
+  (()=>{
+    /**
+     * Init variables used to refresh the running crawls table
+    */
+    debug = document.getElementById("headerDebug") != null;
+	  crawlsTable = document.getElementById("crawlProfiles");
+	  if(!crawlsTable && !crawlsTable.rows) {
+		  crawlsHeadLength = !crawlsTable.tHead ? crawlsTable.tHead.rows.length : 0;
+	  }
+	  runningCrawlsLegend = document.getElementById("runningCrawlsLegend");
+  })();
 
-/**
- * Init variables used to refresh the running crawls table
- */
-function initCrawlProfiles() {
-	debug = document.getElementById("headerDebug") != null;
-	crawlsTable = document.getElementById("crawlProfiles");
-	if(crawlsTable != null && crawlsTable.rows != null) {
-		crawlsHeadLength = crawlsTable.tHead != null ? crawlsTable.tHead.rows.length : 0;
-	}
-	runningCrawlsLegend = document.getElementById("runningCrawlsLegend");
+  refresh();
+  //loadInterval=window.setInterval("refresh()", refreshInterval*1000);
+  let countInterval=window.setInterval("countdown()",1000);
 }
 
 function changeInterval(){
@@ -68,11 +66,11 @@ function changeInterval(){
 	}
 }
 function newInterval(){
-	var newInterval=document.getElementById("nextUpdate").value;
-        // make sure that only positive intervals can be set
-        if(newInterval>0){
-                refreshInterval=newInterval;
-        }
+	let newInterval=document.getElementById("nextUpdate").value;
+  // make sure that only positive intervals can be set
+  if(newInterval>0){
+    refreshInterval=newInterval;
+  }
 	refresh();
 	countInterval=window.setInterval("countdown()", 1000);
 	changing=false;
@@ -80,8 +78,8 @@ function newInterval(){
 
 function countdown(){
 	if(statusLoaded){
-        wait--;
-		if (wait == 0) {
+    --wait;
+		if(wait == 0){
 			refresh();
 		}
 	}
@@ -102,43 +100,43 @@ function requestStatus(){
 }
 
 function handleStatus(){
-    if(statusRPC.readyState != 4){
+  if(statusRPC.readyState != 4){
 		return;
 	}
-	var statusResponse = statusRPC.responseXML;
-	var statusTag = getFirstChild(statusResponse, "status");
+	let statusResponse = statusRPC.responseXML;
+	let statusTag = getFirstChild(statusResponse, "status");
 	
-	var ppm = getValue(getFirstChild(statusTag, "ppm"));
+	let ppm = getValue(getFirstChild(statusTag, "ppm"));
 	
-	var ppmNum = document.getElementById("ppmNum");
+	let ppmNum = document.getElementById("ppmNum");
 	removeAllChildren(ppmNum);
 	ppmNum.appendChild(document.createTextNode(ppm));
 	
 	// ppmBar start
-	var ppmBar = document.getElementById("ppmbar");
-	var ppmBarMaxRead = document.getElementById("customPPM");
+	let ppmBar = document.getElementById("ppmbar");
+	let ppmBarMaxRead = document.getElementById("customPPM");
 	
-    var ppmforppmbar = ppm.replace(/\.*/g,"");	
+  let ppmforppmbar = ppm.replace(/\.*/g,"");	
 	ppmBar.setAttribute("value", ppmforppmbar);
-    ppmBar.setAttribute("max", ppmBarMaxRead.value);
+  ppmBar.setAttribute("max", ppmBarMaxRead.value);
 	// ppmBar end
 	
 	// traffic output (no bar up to now)
-    var traffic = getFirstChild(statusTag, "traffic");
-    var trafficCrawlerValue = getValue(getFirstChild(traffic, "crawler"));
-    var trafCrawlerSpan = document.getElementById("trafficCrawler");
-    removeAllChildren(trafCrawlerSpan);
+  let traffic = getFirstChild(statusTag, "traffic");
+  let trafficCrawlerValue = getValue(getFirstChild(traffic, "crawler"));
+  let trafCrawlerSpan = document.getElementById("trafficCrawler");
+  removeAllChildren(trafCrawlerSpan);
 	trafCrawlerSpan.appendChild(document.createTextNode(Math.round((trafficCrawlerValue) / 1024 / 10.24) / 100));
 	
-	var dbsize = getFirstChild(statusTag, "dbsize");
-	var urlpublictext = getValue(getFirstChild(dbsize, "urlpublictext"));
-	var urlpublictextSegmentCount = getValue(getFirstChild(dbsize, "urlpublictextSegmentCount"));
-	var webgraph = getValue(getFirstChild(dbsize, "webgraph"));
-	var webgraphSegmentCount = getValue(getFirstChild(dbsize, "webgraphSegmentCount"));
-	var citation = getValue(getFirstChild(dbsize, "citation"));
-	var citationSegmentCount = getValue(getFirstChild(dbsize, "citationSegmentCount"));
-	var rwipublictext = getValue(getFirstChild(dbsize, "rwipublictext"));
-	var rwipublictextSegmentCount = getValue(getFirstChild(dbsize, "rwipublictextSegmentCount"));
+	let dbsize = getFirstChild(statusTag, "dbsize");
+	let urlpublictext = getValue(getFirstChild(dbsize, "urlpublictext"));
+	let urlpublictextSegmentCount = getValue(getFirstChild(dbsize, "urlpublictextSegmentCount"));
+	let webgraph = getValue(getFirstChild(dbsize, "webgraph"));
+	let webgraphSegmentCount = getValue(getFirstChild(dbsize, "webgraphSegmentCount"));
+	let citation = getValue(getFirstChild(dbsize, "citation"));
+	let citationSegmentCount = getValue(getFirstChild(dbsize, "citationSegmentCount"));
+	let rwipublictext = getValue(getFirstChild(dbsize, "rwipublictext"));
+	let rwipublictextSegmentCount = getValue(getFirstChild(dbsize, "rwipublictextSegmentCount"));
 	document.getElementById("urlpublictextSize").firstChild.nodeValue=urlpublictext;
 	document.getElementById("urlpublictextSegmentCount").firstChild.nodeValue=urlpublictextSegmentCount;
 	document.getElementById("webgraphSize").firstChild.nodeValue=webgraph;
@@ -150,48 +148,48 @@ function handleStatus(){
 	
 	refreshRunningCrawls(statusTag);
 
-	var postprocessing = getFirstChild(statusTag, "postprocessing");
+	let postprocessing = getFirstChild(statusTag, "postprocessing");
 	document.getElementById("postprocessing_status").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "status"));
 	document.getElementById("postprocessing_collection").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "collectionRemainingCount"));
 	document.getElementById("postprocessing_webgraph").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "webgraphRemainingCount"));
 	document.getElementById("postprocessing_remainingTimeMinutes").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "remainingTimeMinutes"));
 	document.getElementById("postprocessing_remainingTimeSeconds").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "remainingTimeSeconds"));
-	var postprocessingElapsedTime = parseInt(getValue(getFirstChild(postprocessing, "ElapsedTime")));
-	var postprocessingRemainingTime = parseInt(getValue(getFirstChild(postprocessing, "RemainingTime")));
-	var p = 100 * postprocessingElapsedTime / (postprocessingElapsedTime + postprocessingRemainingTime) || 0;
+	let postprocessingElapsedTime = parseInt(getValue(getFirstChild(postprocessing, "ElapsedTime")));
+	let postprocessingRemainingTime = parseInt(getValue(getFirstChild(postprocessing, "RemainingTime")));
+	let p = 100 * postprocessingElapsedTime / (postprocessingElapsedTime + postprocessingRemainingTime) || 0;
 	document.getElementById("postprocessing_bar").firstChild.setAttribute("value",  p);
 	//document.getElementById("postprocessing_speed").firstChild.nodeValue=getValue(getFirstChild(postprocessing, "speed"));
 	
-	var load = getFirstChild(statusTag, "load");
+	let load = getFirstChild(statusTag, "load");
 	document.getElementById("load").firstChild.nodeValue=getValue(load);
 	
-	var loaderqueue = getFirstChild(statusTag, "loaderqueue");	
-	var loaderqueue_size = getValue(getFirstChild(loaderqueue, "size"));
-	var loaderqueue_max = getValue(getFirstChild(loaderqueue, "max"));
+	let loaderqueue = getFirstChild(statusTag, "loaderqueue");	
+	let loaderqueue_size = getValue(getFirstChild(loaderqueue, "size"));
+	let loaderqueue_max = getValue(getFirstChild(loaderqueue, "max"));
 	document.getElementById("loaderqueuesize").firstChild.nodeValue=loaderqueue_size;
 	document.getElementById("loaderqueuemax").firstChild.nodeValue=loaderqueue_max;
 	
-	var localcrawlerqueue = getFirstChild(statusTag, "localcrawlerqueue");
-	var localcrawlerqueue_size = getValue(getFirstChild(localcrawlerqueue, "size"));
-	var localcrawlerqueue_state = getValue(getFirstChild(localcrawlerqueue, "state"));
+	let localcrawlerqueue = getFirstChild(statusTag, "localcrawlerqueue");
+	let localcrawlerqueue_size = getValue(getFirstChild(localcrawlerqueue, "size"));
+	let localcrawlerqueue_state = getValue(getFirstChild(localcrawlerqueue, "state"));
 	document.getElementById("localcrawlerqueuesize").firstChild.nodeValue=localcrawlerqueue_size;
 	putQueueState("localcrawler", localcrawlerqueue_state);
 	
-	var limitcrawlerqueue = getFirstChild(statusTag, "limitcrawlerqueue");
-	var limitcrawlerqueue_size = getValue(getFirstChild(limitcrawlerqueue, "size"));
-	var limitcrawlerqueue_state = getValue(getFirstChild(limitcrawlerqueue, "state"));
+	let limitcrawlerqueue = getFirstChild(statusTag, "limitcrawlerqueue");
+	let limitcrawlerqueue_size = getValue(getFirstChild(limitcrawlerqueue, "size"));
+	let limitcrawlerqueue_state = getValue(getFirstChild(limitcrawlerqueue, "state"));
 	document.getElementById("limitcrawlerqueuesize").firstChild.nodeValue=limitcrawlerqueue_size;
 	putQueueState("limitcrawler", limitcrawlerqueue_state);
 	
-	var remotecrawlerqueue = getFirstChild(statusTag, "remotecrawlerqueue");
-	var remotecrawlerqueue_size = getValue(getFirstChild(remotecrawlerqueue, "size"));
-	var remotecrawlerqueue_state = getValue(getFirstChild(remotecrawlerqueue, "state"));
+	let remotecrawlerqueue = getFirstChild(statusTag, "remotecrawlerqueue");
+	let remotecrawlerqueue_size = getValue(getFirstChild(remotecrawlerqueue, "size"));
+	let remotecrawlerqueue_state = getValue(getFirstChild(remotecrawlerqueue, "state"));
 	document.getElementById("remotecrawlerqueuesize").firstChild.nodeValue=remotecrawlerqueue_size;
 	putQueueState("remotecrawler", remotecrawlerqueue_state);
 	
-	var noloadcrawlerqueue = getFirstChild(statusTag, "noloadcrawlerqueue");
-	var noloadcrawlerqueue_size = getValue(getFirstChild(noloadcrawlerqueue, "size"));
-	var noloadcrawlerqueue_state = getValue(getFirstChild(noloadcrawlerqueue, "state"));
+	let noloadcrawlerqueue = getFirstChild(statusTag, "noloadcrawlerqueue");
+	let noloadcrawlerqueue_size = getValue(getFirstChild(noloadcrawlerqueue, "size"));
+	let noloadcrawlerqueue_state = getValue(getFirstChild(noloadcrawlerqueue, "state"));
 	document.getElementById("noloadcrawlerqueuesize").firstChild.nodeValue=noloadcrawlerqueue_size;
 	putQueueState("noloadcrawler", noloadcrawlerqueue_state);
 
@@ -380,19 +378,15 @@ function putQueueState(queue, state) {
 	}
 }
 
-function shortenURL(url) {
-	if (url.length > 80) {
-		return url.substr(0, 80) + "...";
-	} else {
-		return url;
-	}
+function shortenURL(url):string{
+	return url.length > 80 ? (url.substr(0, 80) + "...") : url;
 }
 
 function createIndexingRow(queue, profile, initiator, depth, modified, anchor, url, size, deletebutton){
-    row=document.createElement("tr");
-    row.setAttribute("height", 10);
-    row.appendChild(createCol(queue));
-    row.appendChild(createCol(profile));
+  row=document.createElement("tr");
+  row.setAttribute("height", 10);
+  row.appendChild(createCol(queue));
+  row.appendChild(createCol(profile));
 	row.appendChild(createCol(initiator));
 	row.appendChild(createCol(depth));
 	row.appendChild(createCol(modified));
