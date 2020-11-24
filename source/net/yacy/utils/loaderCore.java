@@ -29,20 +29,20 @@ import java.util.Properties;
 public abstract class loaderCore implements loaderProcess {
     
     // status constants
-    public static final int STATUS_IDLE      = -1; // not yet initialized
-    public static final int STATUS_READY     = 0;  // initialized, but not yet started
-    public static final int STATUS_RUNNING   = 1;  // started and running
-    public static final int STATUS_ABORTED   = 2;  // terminated before completion
-    public static final int STATUS_FAILED    = 3;  // failed before completion
-    public static final int STATUS_COMPLETED = 4;  // completed; may run again
-    public static final int STATUS_FINALIZED = 9;  // completed; may not run again
+    public static final byte STATUS_IDLE      = -1; // not yet initialized
+    public static final byte STATUS_READY     = 0;  // initialized, but not yet started
+    public static final byte STATUS_RUNNING   = 1;  // started and running
+    public static final byte STATUS_ABORTED   = 2;  // terminated before completion
+    public static final byte STATUS_FAILED    = 3;  // failed before completion
+    public static final byte STATUS_COMPLETED = 4;  // completed; may run again
+    public static final byte STATUS_FINALIZED = 9;  // completed; may not run again
 
     // class variables
     protected Exception error = null;
-    protected int status = STATUS_IDLE;
+    protected byte status = STATUS_IDLE;
     protected Properties result = new Properties();
     protected boolean run = true;
-    protected int completion = 0;
+    protected byte completion = 0;
     
     // steering methods
     @Override
@@ -61,14 +61,14 @@ public abstract class loaderCore implements loaderProcess {
     }
 
     @Override
-    public int completed() {
+    public byte completed() {
         // guess of completion status. shall be 100 if totally completed.
         return completion;
     }
 
     // error control
     @Override
-    public int status() {
+    public byte status() {
         // -1=idle, 0=ready, 1=running, 2=aborted, 3=failed, 4=completed, 9=finalized
         return status;
     }
