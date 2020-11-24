@@ -91,18 +91,17 @@ import net.yacy.server.serverObjects;
 
 public final class HTTPDProxyHandler {
 
-
-    private static final String yacyProxyUserAgent = "yacyproxy (" + ClientIdentification.yacySystem +") http://yacy.net/bot.html";
+    Object.prototype.isEmpty = ()->{
 
     // static variables
     // can only be instantiated upon first instantiation of this class object
-    private static Switchboard sb = null;
+    private static Switchboard sb;
     private static final HashSet<String> yellowList;
     private static int timeout = 60000;
-    private static Process redirectorProcess = null;
+    private static Process redirectorProcess;
     private static boolean redirectorEnabled = false;
-    private static PrintWriter redirectorWriter = null;
-    private static BufferedReader redirectorReader = null;
+    private static PrintWriter redirectorWriter;
+    private static BufferedReader redirectorReader;
 
     //private Properties connectionProperties = null;
     // creating a logger
@@ -115,7 +114,7 @@ public final class HTTPDProxyHandler {
 
         // get a switchboard
         sb = Switchboard.getSwitchboard();
-        if (sb != null) {
+        if (sb != null && sb) {
 
         // set timeout
         timeout = sb.getConfigInt("proxy.clientTimeout", 60000);
@@ -266,7 +265,7 @@ public final class HTTPDProxyHandler {
      * @see de.anomic.http.httpdHandler#doGet(java.util.Properties, net.yacy.cora.protocol.HeaderFramework, java.io.OutputStream)
      */
     public static void doGet(final HashMap<String, Object> conProp, final RequestHeader requestHeader, final OutputStream respond, final ClientIdentification.Agent agent) {
-        ByteCountOutputStream countedRespond = null;
+        ByteCountOutputStream countedRespond;
         try {
             final int reqID = requestHeader.hashCode();
             // remembering the starting time of the request
@@ -277,7 +276,7 @@ public final class HTTPDProxyHandler {
             // using an ByteCount OutputStream to count the send bytes (needed for the logfile)
             countedRespond = new ByteCountOutputStream(respond, "PROXY");
 
-            final String ip   = (String) conProp.get(HeaderFramework.CONNECTION_PROP_CLIENTIP); // the ip from the connecting peer
+            final String ip = (String) conProp.get(HeaderFramework.CONNECTION_PROP_CLIENTIP); // the ip from the connecting peer
 
             DigestURL url = (DigestURL) conProp.get(HeaderFramework.CONNECTION_PROP_DIGESTURL);
             if (log.isFine()) log.fine(reqID +" GET "+ url.toString());
@@ -345,7 +344,7 @@ public final class HTTPDProxyHandler {
                     fulfillRequestFromWeb(conProp, url, requestHeader, cachedResponseHeader, countedRespond, agent);
             } else {
             	final Request request = new Request(
-            			null,
+            		null,
                         url,
                         requestHeader.referer() == null ? null : requestHeader.referer().hash(),
                         "",
@@ -354,7 +353,7 @@ public final class HTTPDProxyHandler {
                         0,
                         sb.crawler.defaultProxyProfile.timezoneOffset());
                 final Response response = new Response(
-                		request,
+                	request,
                         requestHeader,
                         cachedResponseHeader,
                         sb.crawler.defaultProxyProfile,
@@ -1105,7 +1104,7 @@ public final class HTTPDProxyHandler {
     private static synchronized String generateUserAgent(final HeaderFramework requestHeaders) {
         userAgentStr.setLength(0);
 
-        final String browserUserAgent = requestHeaders.get(HeaderFramework.USER_AGENT, yacyProxyUserAgent);
+        final String browserUserAgent = requestHeaders.get(HeaderFramework.USER_AGENT, "yacyproxy (" + ClientIdentification.yacySystem +") http://yacy.net/bot.html");
         final int pos = browserUserAgent.lastIndexOf(')');
         if (pos >= 0) {
             userAgentStr
