@@ -208,9 +208,7 @@ public final class TemplateEngine {
     private final static byte[] writeTemplate(final String servletname, final InputStream in, final OutputStream out, final serverObjects pattern, final byte[] prefix) throws IOException {
         final PushbackInputStream pis = new PushbackInputStream(in, 100);
         final ByteArrayOutputStream keyStream = new ByteArrayOutputStream(4048);
-        byte[] key;
-        byte[] multi_key;
-        byte[] replacement;
+        byte[] key, multi_key, replacement;
         int bb;
         final ByteBuffer structure = new ByteBuffer();
         final String clientbrowserlang = pattern.get("clientlanguage"); // preferred language or null (used for include files)
@@ -253,7 +251,7 @@ public final class TemplateEngine {
                                  .append(multi_num)
                                  .append(ASCII.getBytes(Integer.toString(num)))
                                  .append(close_quotetagn);
-                        for(int i=0;i < num;i++) {
+                        for(int i=0;i < num;++i) {
                             final PushbackInputStream pis2 = new PushbackInputStream(new ByteArrayInputStream(text));
                             //System.out.println("recursing with text(prefix="+ multi_key + "_" + i + "_" +"):"); //DEBUG
                             //System.out.println(text);
@@ -305,10 +303,9 @@ public final class TemplateEngine {
                     transferUntil(pis, keyStream, appendBytes(PP, patternName, null, null));
                     if(pis.available()==0){
                         ConcurrentLog.severe("TEMPLATE", "Bad Key-Value pair in #()# construct: key=\"" + patternKey + "\", value=\"" + UTF8.String(patternName) + "\" in " + servletname);
-                        final byte[] sb = structure.getBytes();
                         structure.close();
                         text.close();
-                        return sb;
+                        return structure.getBytes();
                     }
                     keyStream.reset();
                     transferUntil(pis, keyStream, dpdpa);
@@ -334,7 +331,7 @@ public final class TemplateEngine {
                                     structure.append(writeTemplate(servletname, pis2, out, pattern, newPrefix(prefix,key)));
                                     structure.append(open_endtag).append(key).append(close_tagn);
                                     found=true;
-                                }else if(others >0 && keyStream.toString().startsWith("/")){ //close nested
+                                }else if(others > 0 && keyStream.toString().startsWith("/")){ //close nested
                                     others--;
                                     text.append(aOpen).append(keyStream.toByteArray()).append(brackclose_hash);
                                 } else { //nested
@@ -360,7 +357,7 @@ public final class TemplateEngine {
 
                                     found=true;
                                 }
-                                currentPattern++;
+                                ++currentPattern;
                                 text.clear();
                                 continue;
                             }
@@ -394,10 +391,9 @@ public final class TemplateEngine {
                     // inconsistency, simply finalize this
                     FileUtils.copy(pis, out);
                     pis.close();
-                    final byte[] sb = structure.getBytes();
                     structure.close();
                     keyStream.close();
-                    return sb;
+                    return structure.getBytes();
                 }
 
             // #%
@@ -444,41 +440,37 @@ public final class TemplateEngine {
                 out.write(bb);
             }
         }
-        final byte[] sb = structure.getBytes();
         structure.close();
-        return sb;
+        return structure.getBytes();
     }
 
     private final static byte[] replacePattern(final String key, final serverObjects pattern) {
-        byte[] replacement;
         Object value;
         if (pattern.containsKey(key)) {
             value = pattern.get(key);
             if (value instanceof byte[]) {
-                replacement = (byte[]) value;
+                return (byte[]) value;
             } else if (value instanceof String) {
                 //replacement = ((String) value).getBytes();
-                replacement = UTF8.getBytes(((String) value));
+                return UTF8.getBytes(((String) value));
             } else {
                 //replacement = value.toString().getBytes();
-                replacement = UTF8.getBytes(value.toString());
+                return UTF8.getBytes(value.toString());
             }
         } else {
-            replacement = UNRESOLVED_PATTERN;
+            return UNRESOLVED_PATTERN;
         }
-        return replacement;
     }
 
     private final static byte[] newPrefix(final byte[] oldPrefix, final byte[] key) {
         final ByteBuffer newPrefix = new ByteBuffer(oldPrefix.length + key.length + 1);
         newPrefix.append(oldPrefix).append(key).append(ul);
-        final byte[] result = newPrefix.getBytes();
         try {
             newPrefix.close();
         } catch (final IOException e) {
             ConcurrentLog.logException(e);
         }
-        return result;
+        return newPrefix.getBytes();
     }
 
     private final static byte[] newPrefix(final byte[] oldPrefix, final byte[] multi_key, final int i) {
@@ -511,13 +503,12 @@ public final class TemplateEngine {
         byteArray.append(b1).append(b2);
         if (b3 != null) byteArray.append(b3);
         if (b4 != null) byteArray.append(b4);
-        final byte[] result = byteArray.getBytes();
         try {
             byteArray.close();
         } catch (final IOException e) {
             ConcurrentLog.logException(e);
         }
-        return result;
+        return byteArray.getBytes();
     }
 
     public static void main(final String[] args) {
