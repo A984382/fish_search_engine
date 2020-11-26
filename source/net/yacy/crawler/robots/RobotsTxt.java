@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -71,7 +72,8 @@ public class RobotsTxt {
     private final WorkTables tables;
     private final LoaderDispatcher loader;
     /** Thread pool used to launch concurrent tasks */
-	private ThreadPoolExecutor threadPool; 
+    private ThreadPoolExecutor threadPool;
+    private Optional<ThreadPoolExecutor> isThreadPool = Optional.ofNullable(threadPool);
 
     private static class DomSync {
     	private DomSync() {}
@@ -110,9 +112,7 @@ public class RobotsTxt {
     
     public void close() {
     	/* Shutdown all active robots.txt loading threads */
-    	if(this.threadPool != null) {
-    		this.threadPool.shutdownNow();
-    	}
+    	isThreadPool.ifPresent(() -> this.threadPool.shutdownNow());
     }
 
     public int size() throws IOException {
