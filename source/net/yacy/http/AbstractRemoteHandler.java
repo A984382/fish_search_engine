@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -51,7 +52,8 @@ import org.eclipse.jetty.server.Request;
  */
 abstract public class AbstractRemoteHandler extends ConnectHandler implements Handler {
 	
-    protected Switchboard sb = null;
+    protected Switchboard sb;
+    protected Optional<Switchboard> isSb = Optional.of(sb);
     private final Set<String> localVirtualHostNames = new HashSet<String>(); // list for quick check for req to local peer
     
     @Override
@@ -67,7 +69,7 @@ abstract public class AbstractRemoteHandler extends ConnectHandler implements Ha
             @Override
             public void run() {
                 for (InetAddress localInetAddress : Domains.myPublicIPv4()) {
-                    if (localInetAddress != null) {
+                    if (localInetAddress.isReachable(1000)) {
                         if (!localVirtualHostNames.contains(localInetAddress.getHostName())) {
                             localVirtualHostNames.add(localInetAddress.getHostName());
                             localVirtualHostNames.add(localInetAddress.getHostAddress());  // same as getServer().getURI().getHost()
@@ -79,7 +81,7 @@ abstract public class AbstractRemoteHandler extends ConnectHandler implements Ha
                     }
                 }
                 for (InetAddress localInetAddress : Domains.myPublicIPv6()) {
-                    if (localInetAddress != null) {
+                    if (localInetAddress.isReachable(1000)) {
                         if (!localVirtualHostNames.contains(localInetAddress.getHostName())) {
                             localVirtualHostNames.add(localInetAddress.getHostName());
                             localVirtualHostNames.add(localInetAddress.getHostAddress());  // same as getServer().getURI().getHost()
@@ -90,7 +92,7 @@ abstract public class AbstractRemoteHandler extends ConnectHandler implements Ha
                         }
                     }
                 }
-                if (sb.peers != null) {
+                if (!sb.peers) {
                     localVirtualHostNames.addAll(sb.peers.mySeed().getIPs());
                     localVirtualHostNames.add(sb.peers.myAlternativeAddress()); // add the "peername.yacy" address
                     localVirtualHostNames.add(sb.peers.mySeed().getHexHash() + ".yacyh"); // bugfix by P. Dahl
@@ -107,7 +109,8 @@ abstract public class AbstractRemoteHandler extends ConnectHandler implements Ha
             HttpServletResponse response) throws IOException, ServletException {
 
         String host = request.getHeader("Host");
-        if (host == null) return; // no proxy request, continue processing by handlers
+        Optional<String> isHost = Optional.ofNullable(host);
+        if (isHost.isEmpty()) return; // no proxy request, continue processing by handlers
         String hostOnly = Domains.stripToHostName(host);
         
         if (localVirtualHostNames.contains(hostOnly)) return; // no proxy request (quick check), continue processing by handlers        
@@ -118,7 +121,7 @@ abstract public class AbstractRemoteHandler extends ConnectHandler implements Ha
         }
         
         InetAddress resolvedIP = Domains.dnsResolve(hostOnly); // during testing isLocal() failed to resolve domain against publicIP  
-        if (resolvedIP != null && sb.myPublicIPs().contains(resolvedIP.getHostAddress())) {
+        if (resolvedIP.isReachable(1000) && sb.myPublicIPs().contains(resolvedIP.getHostAddress())) {
             localVirtualHostNames.add(resolvedIP.getHostName()); // remember resolved hostname
             //localVirtualHostNames.add(resolved.getHostAddress()); // might change ?
             return;  
