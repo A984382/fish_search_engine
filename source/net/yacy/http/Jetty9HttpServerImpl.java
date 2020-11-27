@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.security.KeyStore;
 import java.util.StringTokenizer;
+import java.util.Optional;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -87,7 +88,8 @@ public class Jetty9HttpServerImpl implements YaCyHttpServer {
         if (useSSL) {
             final SslContextFactory sslContextFactory = new SslContextFactory();
             final SSLContext sslContext = initSslContext(sb);
-            if (sslContext != null) {
+	    Optional<SSLContext> isSSLContext = Optional.of(sslContext);
+            isSSLContext.ifPresent(()->{
 
                 int sslport = sb.getConfigInt(SwitchboardConstants.SERVER_SSLPORT, 8443);
                 sslContextFactory.setSslContext(sslContext);
@@ -106,7 +108,7 @@ public class Jetty9HttpServerImpl implements YaCyHttpServer {
 
                 server.addConnector(sslConnector);
                 ConcurrentLog.info("SERVER", "SSL support initialized successfully on port " + sslport);
-            }
+            });
         }
 
         YacyDomainHandler domainHandler = new YacyDomainHandler();
@@ -232,16 +234,15 @@ public class Jetty9HttpServerImpl implements YaCyHttpServer {
 			} else {
 				whiteListHandler = new InetAccessHandler();
 			}
-            int i = 0;
-            while (st.hasMoreTokens()) {
+            
+            for (int i = 0; st.hasMoreTokens(); ++i) {
                 final String pattern = st.nextToken();
                 try {
-                	whiteListHandler.include(pattern);
+                    whiteListHandler.include(pattern);
                 } catch (final IllegalArgumentException nex) { // catch format exception on wrong ip address pattern
                     ConcurrentLog.severe("SERVER", "Server Access Settings - IP filter: " + nex.getMessage());
                     continue;
                 }
-                i++;
             }          
             if (i > 0) {
             	final String loopbackAddress = InetAddress.getLoopbackAddress().getHostAddress();
@@ -264,7 +265,7 @@ public class Jetty9HttpServerImpl implements YaCyHttpServer {
     @Override
     public void startupServer() throws Exception {
         // option to finish running requests on shutdown
-//        server.setGracefulShutdown(3000);
+        // server.setGracefulShutdown(3000);
         server.setStopAtShutdown(true);
         server.start();
     }
@@ -295,7 +296,7 @@ public class Jetty9HttpServerImpl implements YaCyHttpServer {
      * @return the ssl/https port or -1 if not active
      */
     @Override
-    public int getSslPort() {
+    public short getSslPort() {
         Connector[] clist = server.getConnectors();
         for (Connector c:clist) {
             if (c.getName().startsWith("ssl")) {
