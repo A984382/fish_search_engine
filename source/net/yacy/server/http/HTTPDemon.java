@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Optional;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import net.yacy.cora.document.encoding.UTF8;
@@ -59,8 +60,7 @@ import net.yacy.server.serverObjects;
 public final class HTTPDemon {
 
 
-    private static final int ERRORCASE_MESSAGE = 4;
-    private static final int ERRORCASE_FILE = 5;
+    private static final byte ERRORCASE_MESSAGE = 4, ERRORCASE_FILE = 5;
 
     // static objects
     private static volatile Switchboard switchboard = Switchboard.getSwitchboard();
@@ -124,11 +124,11 @@ public final class HTTPDemon {
             ResponseHeader header
     ) throws IOException {
 
-        FileInputStream fis = null;
-        ByteArrayOutputStream o = null;
+        Optional<FileInputStream> fis = Optional.empty();
+        Optional<ByteArrayOutputStream> o = Optional.empty();
         try {
             // setting the proper http status message
-            String httpVersion = (String) conProp.get(HeaderFramework.CONNECTION_PROP_HTTP_VER);
+            Optional<String> httpVersion = Optional.ofNullable((String) conProp.get(HeaderFramework.CONNECTION_PROP_HTTP_VER));
             if (httpVersion == null) httpVersion = HeaderFramework.HTTP_VERSION_1_1;
             if ((httpStatusText == null)||(httpStatusText.length()==0)) {
                 //http1_1 includes http1_0 messages
