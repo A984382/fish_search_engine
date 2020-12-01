@@ -158,16 +158,10 @@ public class GSAsearchServlet extends HttpServlet {
             // if a gsa-style sort attribute is given, use this to set the solr sort attribute
             GSAResponseWriter.Sort sort = new GSAResponseWriter.Sort(post.get(CommonParams.SORT, ""));
             String sorts = sort.toSolr();
-            if (sorts == null) {
-                post.remove(CommonParams.SORT);
-            } else {
-                post.put(CommonParams.SORT, sorts);
-            }
+            post.remove(CommonParams.SORT, (sorts == null) ? null : sorts);
         } else {
             // if no such sort attribute is given, use the ranking as configured for YaCy
-            String fq = ranking.getFilterQuery();
-            String bq = ranking.getBoostQuery();
-            String bf = ranking.getBoostFunction();
+            String fq = ranking.getFilterQuery(), bq = ranking.getBoostQuery(), bf = ranking.getBoostFunction();
             if (fq.length() > 0) post.put(CommonParams.FQ, fq);
             if (bq.length() > 0) post.put(DisMaxParams.BQ, bq);
             if (bf.length() > 0) post.put("boost", bf); // a boost function extension, see http://wiki.apache.org/solr/ExtendedDisMax#bf_.28Boost_Function.2C_additive.29
@@ -179,10 +173,8 @@ public class GSAsearchServlet extends HttpServlet {
             for (String dr: daterange) {
                 String from_to[] = dr.endsWith("..") ? new String[]{dr.substring(0, dr.length() - 2), ""} : dr.startsWith("..") ? new String[]{"", dr.substring(2)} : dr.split("\\.\\.");
                 if (from_to.length != 2) continue;
-                Date from = this.parseGSAFS(from_to[0]);
-                if (from == null) from = new Date(0);
-                Date to = this.parseGSAFS(from_to[1]);
-                if (to == null) to = new Date();
+                Date from = from != null ? this.parseGSAFS(from_to[0]) : new Date(0);
+                Date to = to != null ? this.parseGSAFS(from_to[1]) : new Date();
                 to.setTime(to.getTime() + 24L * 60L * 60L * 1000L); // we add a day because the day is inclusive
                 String z = CollectionSchema.last_modified.getSolrFieldName() + ":[" + ISO8601Formatter.FORMATTER.format(from) + " TO " + ISO8601Formatter.FORMATTER.format(to) + "]";
                 datefq = datefq.length() == 0 ? z : " OR " + z;
@@ -259,12 +251,7 @@ public class GSAsearchServlet extends HttpServlet {
 
         // log result
         Object rv = response.getValues().get("response");
-        int matches = 0;
-        if (rv != null && rv instanceof ResultContext) {
-            matches = ((ResultContext) rv).getDocList().matches();
-        } else if (rv != null && rv instanceof SolrDocumentList) {
-            matches = (int) ((SolrDocumentList) rv).getNumFound();
-        }
+        int matches = (rv != null && rv instanceof ResultContext) ? ((ResultContext) rv).getDocList().matches() : (int) ((SolrDocumentList) rv).getNumFound();
         AccessTracker.addToDump(originalQuery, matches);
         ConcurrentLog.info("GSA Query", "results: " + matches + ", for query:" + post.toString());
     }
@@ -277,8 +264,7 @@ public class GSAsearchServlet extends HttpServlet {
      */
     public final Date parseGSAFS(final String datestring) {
 		try {
-			return Date
-					.from(LocalDate.parse(datestring, FORMAT_GSAFS).atStartOfDay(ZoneId.systemDefault()).toInstant());
+			return Date.from(LocalDate.parse(datestring, FORMAT_GSAFS).atStartOfDay(ZoneId.systemDefault()).toInstant());
 		} catch (final RuntimeException e) {
 			return null;
 		}
