@@ -60,6 +60,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -226,7 +227,7 @@ public class Seed implements Cloneable, Comparable<Seed>, Comparator<Seed>
     /** a set of identity founding values, eg. IP, name of the peer, YaCy-version, ... */
     private final ConcurrentMap<String, String> dna;
     private long birthdate; // keep this value in ram since it is often used and may cause lockings in concurrent situations.
-    Bitfield bitfield = null;
+    Optional<Bitfield> bitfield = Optional.empty();
     
     private static ConcurrentMap<String, String> map2concurrentMap(Map<String, String> dna0) {
         ConcurrentMap<String, String> dna = new ConcurrentHashMap<String, String>();
@@ -995,11 +996,12 @@ public class Seed implements Cloneable, Comparable<Seed>, Comparator<Seed>
     }
 
     private boolean getFlag(final int flag) {
-        if (this.bitfield == null) {
+        if ( == null) {
             final String flags = get(Seed.FLAGS, Seed.FLAGSZERO);
             this.bitfield = new Bitfield(ASCII.getBytes(flags));
         }
-        return this.bitfield.get(flag);
+        return this.bitfield.get(flag)Optional.ofNullable(this.bitfield).
+	    .map(String::get);
     }
 
     private void setFlag(final int flag, final boolean value) {
