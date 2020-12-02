@@ -61,7 +61,7 @@ import org.eclipse.jetty.server.Request;
  */
 public class ProxyHandler extends AbstractRemoteHandler implements Handler {
 
-    protected int timeout = 10000;
+    protected short timeout = 10000;
 
     @Override
     protected void doStart() throws Exception {
@@ -195,7 +195,7 @@ public class ProxyHandler extends AbstractRemoteHandler implements Handler {
             ) {
                 // we don't write actually into a file, only to RAM, and schedule writing the file.
             	int l = responseHeaderLegacy.size();
-                final ByteArrayOutputStream byteStream = new ByteArrayOutputStream((l < 32) ? 32 : l);                
+                final ByteArrayOutputStream byteStream = new ByteArrayOutputStream((l < 32) ? 32 : l);
                 final OutputStream toClientAndMemory = new MultiOutputStream(new OutputStream[] {response.getOutputStream(), byteStream});
                 convertHeaderToJetty(clientresponse, response);
                 response.setStatus(statusCode);
@@ -282,13 +282,11 @@ public class ProxyHandler extends AbstractRemoteHandler implements Handler {
         logMessage.append(' ');
 
         // Remote Host
-        final String clientIP = request.getRemoteAddr();
-        logMessage.append(clientIP);
+        logMessage.append(request.getRemoteAddr());
         logMessage.append(' ');
 
         // Method
-        final String requestMethod = request.getMethod();
-        logMessage.append(requestMethod);
+        logMessage.append(request.getMethod());
         logMessage.append(' ');
 
         // URL
