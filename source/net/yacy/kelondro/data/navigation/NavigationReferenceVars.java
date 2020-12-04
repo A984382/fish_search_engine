@@ -34,7 +34,7 @@ import net.yacy.kelondro.index.Row.Entry;
 import net.yacy.kelondro.rwi.AbstractReference;
 import net.yacy.kelondro.rwi.Reference;
 
-public class NavigationReferenceVars  extends AbstractReference implements NavigationReference, Reference, Cloneable, Serializable {
+public class NavigationReferenceVars extends AbstractReference implements NavigationReference, Reference, Cloneable, Serializable {
 
     private static final long serialVersionUID=2873544331190937594L;
 
@@ -170,6 +170,7 @@ public class NavigationReferenceVars  extends AbstractReference implements Navig
 
     @Override
     public int posintext() {
-        throw new UnsupportedOperationException();    }
+        throw new UnsupportedOperationException();
+    }
 
 }
