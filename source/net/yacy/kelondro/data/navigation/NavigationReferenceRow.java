@@ -62,11 +62,15 @@ public final class NavigationReferenceRow extends AbstractReference implements N
         Base64Order.enhancedCoder
     );
 
-    // static properties
-    private static final int col_navhash       =  0; // n 24 the navigation hash and reference hash b64-encoded
-    private static final int col_count         =  1; // c the number of occurences
-    private static final int col_pos           =  2; // p the position of the first occurence
-    private static final int col_flags         =  3; // f reserve, may be used for flags
+    // 
+    /*
+     * static properties:
+     * navhash - 24 the navigation hash and reference hash b64-encoded,
+     * count - the number of occurences,
+     * pos - the position of the first occurence,
+     * flags - reserve, may be used for flags
+     */
+    private static final byte col_navhash=0, col_count=1, col_pos=2, col_flags=3;
 
     private final Row.Entry entry;
 
