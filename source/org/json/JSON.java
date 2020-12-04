@@ -37,32 +37,25 @@ class JSON {
 
     static Boolean toBoolean(Object value) {
         assert value != null;
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        } else if (value instanceof String) {
-            String stringValue = (String) value;
-            if ("true".equalsIgnoreCase(stringValue)) {
-                return true;
-            } else if ("false".equalsIgnoreCase(stringValue)) {
-                return false;
-            }
-        }
-        return null;
+        return ( value instanceof Boolean ) ? (Boolean) value :
+               ( value instanceof String ? ( "true".equalsIgnoreCase((String) value) ? true :
+               ( "false".equalsIgnoreCase((String) value) ? false : null ));
     }
 
     static Double toDouble(Object value) {
         assert value != null;
-        if (value instanceof Double) {
-            return (Double) value;
-        } else if (value instanceof Number) {
-            return ((Number) value).doubleValue();
-        } else if (value instanceof String) {
-            try {
-                return Double.valueOf((String) value);
-            } catch (NumberFormatException ignored) {
-            }
+        if  {
+            return ;
+        } else if  {
+            return ;
+        } else if  {
+             
         }
-        return null;
+        return ( value instanceof Double ) ? (Double) value :
+            ( value instanceof Number ? ((Number) value).doubleValue() :
+            ( value instanceof String ) ?
+            try { return Double.valueOf((String) value); }
+            catch (NumberFormatException ignored) {} ) : null;
     }
 
     static Integer toInteger(Object value) {
