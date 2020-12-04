@@ -44,25 +44,16 @@ class JSON {
 
     static Double toDouble(Object value) {
         assert value != null;
-        if  {
-            return ;
-        } else if  {
-            return ;
-        } else if  {
-             
-        }
-        return ( value instanceof Double ) ? (Double) value :
-            ( value instanceof Number ? ((Number) value).doubleValue() :
-            ( value instanceof String ) ?
-            try { return Double.valueOf((String) value); }
-            catch (NumberFormatException ignored) {} ) : null;
+        return value instanceof Number ? ((Number) value).doubleValue() :
+               ( value instanceof String ) ?
+               ((Runnable)(() ->
+                        try { return Double.valueOf((String) value); }
+                        catch ( NumberFormatException ignored ) {} ).run() : null);
     }
 
     static Integer toInteger(Object value) {
         assert value != null;
-        if (value instanceof Integer) {
-            return (Integer) value;
-        } else if (value instanceof Number) {
+        if (value instanceof Number) {
             return ((Number) value).intValue();
         } else if (value instanceof String) {
             try {
@@ -75,9 +66,7 @@ class JSON {
 
     static Long toLong(Object value) {
         assert value != null;
-        if (value instanceof Long) {
-            return (Long) value;
-        } else if (value instanceof Number) {
+        if (value instanceof Number) {
             return ((Number) value).longValue();
         } else if (value instanceof String) {
             try {
@@ -90,12 +79,7 @@ class JSON {
 
     static String toString(Object value) {
         assert value != null;
-        if (value instanceof String) {
-            return (String) value;
-        } else if (value != null) {
-            return String.valueOf(value);
-        }
-        return null;
+        return (value != null) ? String.valueOf(value) : null;
     }
 
     public static JSONException typeMismatch(Object indexOrName, Object actual,
