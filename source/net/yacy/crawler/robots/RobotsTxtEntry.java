@@ -45,16 +45,7 @@ import net.yacy.cora.util.ConcurrentLog;
 
 public class RobotsTxtEntry {
 
-    private static final String HOST_NAME          = "hostname";
-    private static final String ALLOW_PATH_LIST    = "allow";
-    private static final String DISALLOW_PATH_LIST = "disallow";
-    private static final String SITEMAP_LIST       = "sitemap";
-    private static final String LOADED_DATE        = "date";
-    private static final String MOD_DATE           = "modDate";
-    private static final String ETAG               = "etag";
-    private static final String CRAWL_DELAY        = "crawlDelay";
-    private static final String CRAWL_DELAY_MILLIS = "crawlDelayMillis";
-    private static final String AGENT_NAME         = "agentname";
+    private static final String HOST_NAME="hostname", ALLOW_PATH_LIST="allow", DISALLOW_PATH_LIST="disallow", SITEMAP_LIST="sitemap", LOADED_DATE="date", MOD_DATE="modDate", ETAG="etag", CRAWL_DELAY="crawlDelay", CRAWL_DELAY_MILLIS="crawlDelayMillis", AGENT_NAME="agentname";
 
     // this is a simple record structure that holds all properties of a single crawl start
     private final Map<String, byte[]> mem;
