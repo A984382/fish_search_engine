@@ -456,9 +456,8 @@ public final class CrawlStacker implements WorkflowTask<Request>{
         if (oldDate == null) {
             return null; // no evidence that we know that url
         }
-        final boolean recrawl = profile.recrawlIfOlder() > oldDate.longValue();
         final String urlstring = url.toNormalform(false);
-        if (recrawl) {
+        if (profile.recrawlIfOlder() > oldDate.longValue()) {
             if (CrawlStacker.log.isFine())
                 CrawlStacker.log.fine("RE-CRAWL of URL '" + urlstring + "': this url was crawled " +
                     ((System.currentTimeMillis() - oldDate.longValue()) / 60000 / 60 / 24) + " days ago.");
