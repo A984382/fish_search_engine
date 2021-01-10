@@ -49,9 +49,7 @@ import net.yacy.search.schema.CollectionSchema;
 
 public class QueryGoal {
 
-    private static char space = ' ';
-    private static char sq = '\'';
-    private static char dq = '"';
+    private static char space = ' ', sq = '\'', dq = '"';
     private static String seps = ".:;#*`,!$%()=?^<>/&_";
     
     public String query_original;
